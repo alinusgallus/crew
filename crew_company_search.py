@@ -1,4 +1,6 @@
 import os
+import crewai
+import crewai_tools
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from crewai import Agent, Crew, Task, Process, LLM
