@@ -1,5 +1,3 @@
-
-os
 crewai
 crewai_tools
 pysqlite3-binairy
