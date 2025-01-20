@@ -2,7 +2,7 @@
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
+import streamlite as st
 import os
 import crewai
 import crewai_tools
@@ -13,8 +13,8 @@ from crewai_tools import SerperDevTool, FileReadTool
 
 
 # Set your API key
-os.environ['ANTHROPIC_API_KEY'] = ''
-os.environ["SERPER_API_KEY"] = ' '
+os.environ['ANTHROPIC_API_KEY'] = st.secrets['ANTHROPIC_API_KEY']
+os.environ["SERPER_API_KEY"] = st.secrets['SERPER_API_KEY']
 
 # Initialize the LLM
 llm = LLM(api_key=os.getenv("ANTHROPIC_API_KEY"),
