@@ -33,7 +33,7 @@ class CompanyData(BaseModel):
     contacts: Dict[str, List[Contact]]
 
  # Setup agents
-def initialize_crew(anthropic_api_key,serper_api_key)
+def initialize_crew(anthropic_api_key,serper_api_key):
 
     llm = LLM(
     api_key=anthropic_api_key,  # Explicitly pass the API key as a named argument
