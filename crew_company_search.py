@@ -13,11 +13,16 @@ from crewai_tools import SerperDevTool, FileReadTool
 
 
 # Set your API key
+
 os.environ['ANTHROPIC_API_KEY'] = st.secrets['ANTHROPIC_API_KEY']
 os.environ["SERPER_API_KEY"] = st.secrets['SERPER_API_KEY']
 
+anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+if not anthropic_api_key:
+    raise ValueError("ANTHROPIC_API_KEY is not set. Please check your Streamlit secrets or environment configuration.")
+
 # Initialize the LLM
-llm = LLM(api_key=os.getenv("ANTHROPIC_API_KEY"),
+llm = LLM(anthropic_api_key),
     model="anthropic/claude-3-5-sonnet-20240620",)
 
 resume_tool = FileReadTool(file_path="resume.txt")
