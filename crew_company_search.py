@@ -119,10 +119,7 @@ except Exception as e:
     st.error(f"An error occurred while executing the crew: {e}")
     raise
 
-# Validate the result with Pydantic
-print("\n=== Raw Result ===")
-print(raw_result)
-print("\n=== Type of Result ===")
-print(type(raw_result))
 
+st.write("### Raw Results")
+st.json(raw_result)
 
