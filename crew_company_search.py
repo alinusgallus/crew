@@ -115,9 +115,9 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         expected_output=(
         "Return a JSON object with exactly these keys:\n"
         "{\n"
-        '"company_research": "String containing key company insights",\n'
-        '"industry_insights": "String containing industry analysis",\n'
-        '"contacts": ["Array of contact details as strings"],\n'
+        #'"company_research": "String containing key company insights",\n'
+        #'"industry_insights": "String containing industry analysis",\n'
+        #'"contacts": ["Array of contact details as strings"],\n'
         '"email_draft": "String containing the complete email content"\n'
         "}"
         ),
