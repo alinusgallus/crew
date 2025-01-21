@@ -113,11 +113,12 @@ def initialize_crew(anthropic_api_key,serper_api_key):
             "contact details, and dynamically retrieved resume details."
         ),
         expected_output=(
-        "Return response in JSON format: {"
-        "'company_research': 'Key company insights',"
-        "'industry_insights': 'Industry analysis',"
-        "'contacts': ['List of relevant contacts'],"
-        "'email_draft': 'The complete email content'"
+        "Return a JSON object with exactly these keys:\n"
+        "{\n"
+        '"company_research": "String containing key company insights",\n'
+        '"industry_insights": "String containing industry analysis",\n'
+        '"contacts": ["Array of contact details as strings"],\n'
+        '"email_draft": "String containing the complete email content"\n'
         "}"
         ),
         agent=message_crafter
