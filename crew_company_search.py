@@ -124,15 +124,8 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         process=Process.sequential,
         memory=False,
     )
-    
-    # Inputs for the Crew
-    inputs = {
-        "industry": "Digital Signage",  # Example: Specify the industry
-        "outreach_purpose": "job opportunities",  # Example: Specify the purpose
-        "pitching_role": "Senior Product Manager",  # Example: Specify the role you're pitching
-        "company": "Cenareo", # Company to research
-    }
-    return Crew
+
+    return crew
 
 
 
