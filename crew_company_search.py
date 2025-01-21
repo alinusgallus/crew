@@ -10,7 +10,10 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from crewai import Agent, Crew, Task, Process, LLM
 from crewai_tools import SerperDevTool, FileReadTool
+import litellm  
 
+# Enable verbose logging for LiteLLM
+litellm.set_verbose(True)
 
 # Set your API key
 
