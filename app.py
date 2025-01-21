@@ -1,9 +1,13 @@
-from crew_company_search import initialize_crew
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+
 import streamlit as st
 import os
 from pathlib import Path
 import PyPDF2
 import io
+from crew_company_search import initialize_crew
 
 def pdf_to_text(uploaded_file):
     """Convert uploaded PDF to text"""
