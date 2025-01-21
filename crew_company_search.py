@@ -113,10 +113,16 @@ inputs = {
     "company": "Cenareo", # Company to research
 }
 # Step 7: Run the Crew and Validate Data with Pydantic
-raw_result = crew.kickoff(inputs=inputs)
+try:
+    raw_result = crew.kickoff(inputs=inputs)
+except Exception as e:
+    st.error(f"An error occurred while executing the crew: {e}")
+    raise
 
 # Validate the result with Pydantic
 print("\n=== Raw Result ===")
 print(raw_result)
 print("\n=== Type of Result ===")
 print(type(raw_result))
+
+
