@@ -121,7 +121,8 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         '"email_draft": "String containing the complete email content"\n'
         "}"
         ),
-        agent=message_crafter
+        output_JSON= CompanyInsight,Contact,CompanyData,
+        agent=message_crafter,
     )
     
     
