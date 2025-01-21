@@ -13,7 +13,7 @@ from crewai_tools import SerperDevTool, FileReadTool
 import litellm  
 
 # Enable verbose logging for LiteLLM
-litellm.set_verbose(True)
+litellm.set_verbose = True
 
 # Set your API key
 
