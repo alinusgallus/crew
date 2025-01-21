@@ -36,13 +36,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+@st.cache_data
 def pdf_to_text(uploaded_file):
-    """Convert uploaded PDF to text"""
+    """Convert uploaded PDF to text with caching"""
     try:
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.getvalue()))
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
+        text = "\n".join(page.extract_text() for page in pdf_reader.pages)
         return text
     except Exception as e:
         st.error(f"Error processing PDF: {e}")
@@ -66,37 +65,40 @@ def render_tabs_with_placeholders():
 
 def update_tabs_with_content(result_dict):
     """Update tabs with actual content"""
+    # Debug logging
+    st.write("Debug - Received result type:", type(result_dict))
+    st.write("Debug - Received result keys:", result_dict.keys() if isinstance(result_dict, dict) else "Not a dict")
+    
     tab1, tab2, tab3 = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
     
     with tab1:
         st.subheader("Company Insights")
-        if "company_research" in result_dict:
-            st.markdown(result_dict["company_research"])
-        if "industry_insights" in result_dict:
-            st.markdown("### Industry Analysis")
-            st.markdown(result_dict["industry_insights"])
+        # Handle both string and dict formats
+        if isinstance(result_dict, dict):
+            if "company_research" in result_dict:
+                st.markdown(result_dict["company_research"])
+            if "industry_insights" in result_dict:
+                st.markdown("### Industry Analysis")
+                st.markdown(result_dict["industry_insights"])
+        else:
+            st.markdown(str(result_dict))
 
     with tab2:
         st.subheader("Key Contacts")
-        if "contacts" in result_dict:
+        if isinstance(result_dict, dict) and "contacts" in result_dict:
             contacts = result_dict["contacts"]
             if isinstance(contacts, list):
                 for contact in contacts:
                     with st.expander(contact.split(":")[0] if ":" in contact else contact):
                         st.markdown(contact)
-            elif isinstance(contacts, str):
-                st.markdown(contacts)
+            else:
+                st.markdown(str(contacts))
 
     with tab3:
         st.subheader("Email Draft")
-        if "email_draft" in result_dict:
+        if isinstance(result_dict, dict) and "email_draft" in result_dict:
             email_content = result_dict["email_draft"]
-            if email_content.startswith("Subject:"):
-                subject, body = email_content.split("\n", 1)
-                st.markdown("**" + subject.strip() + "**")
-                email_content = body.strip()
-            
-            email_area = st.text_area(
+            st.text_area(
                 "Email Content",
                 value=email_content,
                 height=300,
@@ -192,28 +194,45 @@ def main():
                 }
                 
                 with st.spinner("🔍 Researching and crafting your application..."):
+                    # Debug logging for input
+                    st.write("Debug - Starting CrewAI process with inputs:", inputs)
+                    
                     raw_result = crew_instance.kickoff(inputs=inputs)
                     
+                    # Debug logging for output
+                    st.write("Debug - Raw result type:", type(raw_result))
+                    st.write("Debug - Raw result preview:", str(raw_result)[:200] if raw_result else "No result")
+                    
                     if raw_result:
-                        st.success("✨ Application materials generated successfully!")
-                        
-                        # Convert string result to dict if needed
-                        if isinstance(raw_result, str):
-                            try:
-                                result_dict = json.loads(raw_result)
-                            except:
-                                result_dict = {"raw": raw_result}
-                        else:
-                            result_dict = raw_result
-
-                        # Update tabs with actual content
-                        st.session_state.generation_complete = True
-                        update_tabs_with_content(result_dict)
+                        try:
+                            # Handle different result formats
+                            if isinstance(raw_result, str):
+                                try:
+                                    result_dict = json.loads(raw_result)
+                                except json.JSONDecodeError:
+                                    # If it's not valid JSON, wrap it in a basic structure
+                                    result_dict = {
+                                        "company_research": raw_result,
+                                        "industry_insights": "",
+                                        "contacts": [],
+                                        "email_draft": ""
+                                    }
+                            else:
+                                result_dict = raw_result
+                            
+                            st.session_state.generation_complete = True
+                            update_tabs_with_content(result_dict)
+                            st.success("✨ Application materials generated successfully!")
+                            
+                        except Exception as e:
+                            st.error(f"Error processing results: {str(e)}")
+                            st.write("Raw result for debugging:", raw_result)
+                            
                     else:
                         st.error("No results were generated. Please try again.")
                         
             except Exception as e:
-                st.error(f"An error occurred: {e}")
+                st.error(f"An error occurred: {str(e)}")
                 st.error("Please try again or contact support if the issue persists.")
 
 if __name__ == "__main__":
