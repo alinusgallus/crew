@@ -66,14 +66,22 @@ def render_tabs_with_placeholders():
 def update_tabs_with_content(result_dict):
     """Update tabs with actual content"""
     # Debug logging
-    st.write("Debug - Received result type:", type(result_dict))
-    st.write("Debug - Received result keys:", result_dict.keys() if isinstance(result_dict, dict) else "Not a dict")
+    with st.expander("Debug Information", expanded=False):
+        st.write("=== CrewAI Output Debug ===")
+        st.write(f"Output type: {type(result_dict)}")
+        if isinstance(result_dict, dict):
+            st.write("Available keys:", list(result_dict.keys()))
+            for key, value in result_dict.items():
+                st.write(f"\n{key} ({type(value)}):")
+                if isinstance(value, str):
+                    st.code(value[:100] + "..." if len(value) > 100 else value)
+                else:
+                    st.write(value)
     
     tab1, tab2, tab3 = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
     
     with tab1:
         st.subheader("Company Insights")
-        # Handle both string and dict formats
         if isinstance(result_dict, dict):
             if "company_research" in result_dict:
                 st.markdown(result_dict["company_research"])
@@ -91,6 +99,8 @@ def update_tabs_with_content(result_dict):
                 for contact in contacts:
                     with st.expander(contact.split(":")[0] if ":" in contact else contact):
                         st.markdown(contact)
+            elif isinstance(contacts, str):
+                st.markdown(contacts)
             else:
                 st.markdown(str(contacts))
 
@@ -98,18 +108,24 @@ def update_tabs_with_content(result_dict):
         st.subheader("Email Draft")
         if isinstance(result_dict, dict) and "email_draft" in result_dict:
             email_content = result_dict["email_draft"]
-            st.text_area(
-                "Email Content",
-                value=email_content,
-                height=300,
-                key="email_content"
-            )
-            
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
-                if st.button("📋 Copy to Clipboard"):
-                    st.code(email_content)
-                    st.success("Email copied!")
+            if isinstance(email_content, str):
+                if email_content.startswith("Subject:"):
+                    subject, body = email_content.split("\n", 1)
+                    st.markdown("**" + subject.strip() + "**")
+                    email_content = body.strip()
+                
+                email_area = st.text_area(
+                    "Email Content",
+                    value=email_content,
+                    height=300,
+                    key="email_content"
+                )
+                
+                col1, col2, col3 = st.columns([1, 1, 1])
+                with col2:
+                    if st.button("📋 Copy to Clipboard"):
+                        st.code(email_content)
+                        st.success("Email copied!")
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -194,23 +210,20 @@ def main():
                 }
                 
                 with st.spinner("🔍 Researching and crafting your application..."):
-                    # Debug logging for input
-                    st.write("Debug - Starting CrewAI process with inputs:", inputs)
-                    
                     raw_result = crew_instance.kickoff(inputs=inputs)
                     
-                    # Debug logging for output
-                    st.write("Debug - Raw result type:", type(raw_result))
-                    st.write("Debug - Raw result preview:", str(raw_result)[:200] if raw_result else "No result")
+                    # Debug logging
+                    with st.expander("Raw CrewAI Response", expanded=False):
+                        st.write("Raw result type:", type(raw_result))
+                        st.write("Raw result preview:", str(raw_result)[:500] if raw_result else "No result")
                     
-                    if raw_result:
+                    if raw_result is not None:
                         try:
                             # Handle different result formats
                             if isinstance(raw_result, str):
                                 try:
                                     result_dict = json.loads(raw_result)
                                 except json.JSONDecodeError:
-                                    # If it's not valid JSON, wrap it in a basic structure
                                     result_dict = {
                                         "company_research": raw_result,
                                         "industry_insights": "",
@@ -226,7 +239,8 @@ def main():
                             
                         except Exception as e:
                             st.error(f"Error processing results: {str(e)}")
-                            st.write("Raw result for debugging:", raw_result)
+                            with st.expander("Debug Information"):
+                                st.write("Raw result for debugging:", raw_result)
                             
                     else:
                         st.error("No results were generated. Please try again.")
