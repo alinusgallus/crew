@@ -6,7 +6,8 @@ import os
 from pathlib import Path
 import PyPDF2
 import io
-from crew_company_search import initialize_crew
+import json
+from crew_setup import initialize_crew
 
 # Page configuration
 st.set_page_config(
@@ -18,11 +19,19 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
     <style>
-    .main {
-        padding: 0rem 1rem;
-    }
     .stButton>button {
-        width: 100%;
+        width: auto;
+        padding: 0.5rem 2rem;
+    }
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .stTabs [data-baseweb="tab-panel"] {
+        padding-top: 1rem;
+    }
+    .stMarkdown {
+        line-height: 1.6;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -38,6 +47,67 @@ def pdf_to_text(uploaded_file):
     except Exception as e:
         st.error(f"Error processing PDF: {e}")
         return None
+
+def render_tabs_with_placeholders():
+    """Render initial tabs with placeholders"""
+    tab1, tab2, tab3 = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
+    
+    with tab1:
+        st.subheader("Company Insights")
+        st.info("Company research and industry insights will appear here after generation.")
+        
+    with tab2:
+        st.subheader("Key Contacts")
+        st.info("Relevant company contacts will be listed here after generation.")
+        
+    with tab3:
+        st.subheader("Email Draft")
+        st.info("Your personalized email draft will appear here after generation.")
+
+def update_tabs_with_content(result_dict):
+    """Update tabs with actual content"""
+    tab1, tab2, tab3 = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
+    
+    with tab1:
+        st.subheader("Company Insights")
+        if "company_research" in result_dict:
+            st.markdown(result_dict["company_research"])
+        if "industry_insights" in result_dict:
+            st.markdown("### Industry Analysis")
+            st.markdown(result_dict["industry_insights"])
+
+    with tab2:
+        st.subheader("Key Contacts")
+        if "contacts" in result_dict:
+            contacts = result_dict["contacts"]
+            if isinstance(contacts, list):
+                for contact in contacts:
+                    with st.expander(contact.split(":")[0] if ":" in contact else contact):
+                        st.markdown(contact)
+            elif isinstance(contacts, str):
+                st.markdown(contacts)
+
+    with tab3:
+        st.subheader("Email Draft")
+        if "email_draft" in result_dict:
+            email_content = result_dict["email_draft"]
+            if email_content.startswith("Subject:"):
+                subject, body = email_content.split("\n", 1)
+                st.markdown("**" + subject.strip() + "**")
+                email_content = body.strip()
+            
+            email_area = st.text_area(
+                "Email Content",
+                value=email_content,
+                height=300,
+                key="email_content"
+            )
+            
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("📋 Copy to Clipboard"):
+                    st.code(email_content)
+                    st.success("Email copied!")
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -84,7 +154,16 @@ def main():
             help="Select the purpose of your outreach"
         )
 
-    if st.button("Generate Application 🚀"):
+    # Generate button in a column layout
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        generate_button = st.button("Generate Application 🚀")
+
+    # Always render tabs with placeholders
+    if 'generation_complete' not in st.session_state:
+        render_tabs_with_placeholders()
+
+    if generate_button:
         if not uploaded_file:
             st.error("Please upload your resume before proceeding!")
             return
@@ -96,18 +175,15 @@ def main():
         # Process the PDF resume
         resume_text = pdf_to_text(uploaded_file)
         if resume_text:
-            # Save resume text to a file
             resume_path = Path("resume.txt")
             resume_path.write_text(resume_text)
             
             try:
-                # Initialize crew with secrets
                 crew_instance = initialize_crew(
                     anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
                     serper_api_key=st.secrets['SERPER_API_KEY']
                 )
                 
-                # Prepare inputs
                 inputs = {
                     "industry": industry,
                     "outreach_purpose": outreach_purpose,
@@ -115,54 +191,24 @@ def main():
                     "company": company
                 }
                 
-                # Execute crew with progress indication
                 with st.spinner("🔍 Researching and crafting your application..."):
                     raw_result = crew_instance.kickoff(inputs=inputs)
                     
                     if raw_result:
                         st.success("✨ Application materials generated successfully!")
                         
-                        # Display results in tabs
-                        tab1, tab2, tab3 = st.tabs(["📊 Company Research", 
-                                                   "👥 Contacts", 
-                                                   "✉️ Email Draft"])
-                        
-                        with tab1:
-                            st.subheader("Company Insights")
-                            if isinstance(raw_result, dict):
-                                if "company_research" in raw_result:
-                                    st.write(raw_result["company_research"])
-                                else:
-                                    st.write(raw_result)
-                            else:
-                                st.write(raw_result)
+                        # Convert string result to dict if needed
+                        if isinstance(raw_result, str):
+                            try:
+                                result_dict = json.loads(raw_result)
+                            except:
+                                result_dict = {"raw": raw_result}
+                        else:
+                            result_dict = raw_result
 
-                        with tab2:
-                            st.subheader("Identified Contacts")
-                            if isinstance(raw_result, dict) and "contacts" in raw_result:
-                                for contact in raw_result["contacts"]:
-                                    with st.expander(f"{contact.get('name', 'Contact')}"):
-                                        st.write(f"Role: {contact.get('role', 'N/A')}")
-                                        st.write(f"Email: {contact.get('email', 'N/A')}")
-                            else:
-                                st.info("No structured contact information available")
-
-                        with tab3:
-                            st.subheader("Generated Email")
-                            if isinstance(raw_result, dict) and "email_draft" in raw_result:
-                                email_content = raw_result["email_draft"]
-                            else:
-                                email_content = str(raw_result)
-                                
-                            st.text_area("Email Content", email_content, height=300)
-                            if st.button("📋 Copy Email"):
-                                st.code(email_content)
-                                st.success("Email copied to clipboard!")
-
-                        # Debug information
-                        with st.expander("🔍 Debug Information"):
-                            st.write("Raw Result Type:", type(raw_result))
-                            st.write("Raw Result:", raw_result)
+                        # Update tabs with actual content
+                        st.session_state.generation_complete = True
+                        update_tabs_with_content(result_dict)
                     else:
                         st.error("No results were generated. Please try again.")
                         
