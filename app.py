@@ -7,7 +7,7 @@ from pathlib import Path
 import PyPDF2
 import io
 import json
-from crew_setup import initialize_crew
+from crew_company_search import initialize_crew
 
 # Page configuration
 st.set_page_config(
