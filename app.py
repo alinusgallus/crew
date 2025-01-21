@@ -95,87 +95,69 @@ def main():
 
     # Handle form submission
     if submit_button:
-        if not uploaded_file:
-            st.error("Please upload your resume before proceeding!")
-            return
+    try:
+        # ... (your existing code until crew execution)
         
-        if not all([industry, company, pitching_role]):
-            st.error("Please fill in all required fields!")
-            return
-        
-        # Process the PDF resume
-        resume_text = pdf_to_text(uploaded_file)
-        if resume_text:
-            # Save resume text to a file
-            resume_path = Path("resume.txt")
-            resume_path.write_text(resume_text)
+        with st.spinner("🔍 Researching and crafting your application..."):
+            raw_result = crew_instance.kickoff(inputs=inputs)
             
-            # Prepare inputs for the crew
-            inputs = {
-                "industry": industry,
-                "outreach_purpose": outreach_purpose,
-                "pitching_role": pitching_role,
-                "company": company
-            }
+            # Create three columns for better organization
+            col1, col2, col3 = st.columns(3)
             
-            # Show processing status
-            with st.spinner("🔍 Researching and crafting your application..."):
+            with col1:
+                st.markdown("### 📊 Company Research")
                 try:
-                    # Execute crew
-                    raw_result = crew_instance.kickoff(inputs=inputs)
-                    
-                    # Display results in organized tabs
-                    st.success("✨ Application materials generated successfully!")
-                    
-                    tabs = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
-                    
-                    with tabs[0]:
-                        st.subheader("Company Insights")
-                        if "company_insights" in raw_result:
-                            with st.container():
-                                st.markdown("### 🏢 Company Overview")
-                                st.write(raw_result["company_insights"].get("industry_focus", ""))
-                                
-                                st.markdown("### 📰 Recent News")
-                                st.write(raw_result["company_insights"].get("recent_news", ""))
-                                
-                                st.markdown("### 🎯 Key Challenges")
-                                st.write(raw_result["company_insights"].get("key_challenges", ""))
-                        else:
-                            st.info("No company insights available")
-                    
-                    with tabs[1]:
-                        st.subheader("Key Contacts")
-                        if "contacts" in raw_result:
-                            for contact in raw_result["contacts"]:
-                                with st.expander(f"{contact.get('name', 'Unknown')} - {contact.get('role', 'Role not specified')}"):
-                                    st.write(f"**Role:** {contact.get('role', 'N/A')}")
-                                    if contact.get('email'):
-                                        st.write(f"**Email:** {contact['email']}")
-                        else:
-                            st.info("No contact information available")
-                    
-                    with tabs[2]:
-                        st.subheader("Personalized Email Draft")
-                        if "email_draft" in raw_result:
-                            email_content = raw_result["email_draft"]
-                            st.text_area("Email Content", email_content, height=300)
-                            
-                            # Copy button for email
-                            if st.button("📋 Copy Email to Clipboard"):
-                                st.code(email_content)  # Shows in a copyable format
-                                st.success("Email copied to clipboard!")
-                        else:
-                            st.info("No email draft available")
-                    
-                    # Save results button
-                    if st.button("💾 Save Results"):
-                        # Implementation for saving results
-                        st.success("Results saved successfully!")
-                        
+                    if isinstance(raw_result, dict):
+                        st.info(raw_result.get('company_research', 'No company research available'))
+                    else:
+                        st.text(str(raw_result))
                 except Exception as e:
-                    st.error(f"An error occurred during processing: {e}")
-                    st.error("Please try again or contact support if the issue persists.")
+                    st.error(f"Error displaying company research: {e}")
 
+            with col2:
+                st.markdown("### 🎯 Industry Insights")
+                try:
+                    if isinstance(raw_result, dict):
+                        st.info(raw_result.get('industry_insights', 'No industry insights available'))
+                    else:
+                        st.text(str(raw_result))
+                except Exception as e:
+                    st.error(f"Error displaying industry insights: {e}")
+
+            with col3:
+                st.markdown("### 👥 Key Contacts")
+                try:
+                    if isinstance(raw_result, dict) and 'contacts' in raw_result:
+                        for contact in raw_result['contacts']:
+                            st.write(f"- {contact}")
+                    else:
+                        st.info("No contact information available")
+                except Exception as e:
+                    st.error(f"Error displaying contacts: {e}")
+
+            # Email draft section
+            st.markdown("### ✉️ Generated Email")
+            try:
+                if isinstance(raw_result, dict) and 'email_draft' in raw_result:
+                    email_content = raw_result['email_draft']
+                    st.text_area("Email Content", email_content, height=200)
+                    if st.button("📋 Copy to Clipboard"):
+                        st.code(email_content)
+                        st.success("Email copied to clipboard!")
+                else:
+                    st.warning("No email draft available in the expected format")
+                    st.text(str(raw_result))
+            except Exception as e:
+                st.error(f"Error displaying email draft: {e}")
+
+            # Debug information in expander
+            with st.expander("🔍 Debug Information"):
+                st.write("Raw Result Type:", type(raw_result))
+                st.write("Raw Result Content:", raw_result)
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        st.error("Please try again or contact support if the issue persists.")
+        
 if __name__ == "__main__":
     main()
