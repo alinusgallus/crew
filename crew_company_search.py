@@ -51,7 +51,7 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         verbose =True,
         llm = llm,
         max_retry_limit=2,
-        max_rpm=20,
+        max_rpm=10,
     )
     industry_researcher = Agent(
         role= "Industry Researcher",
@@ -61,7 +61,7 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         verbose =True,
         llm = llm,
         max_retry_limit=2,
-        max_rpm=20,
+        max_rpm=10,
     )
     
     contact_finder = Agent(
@@ -72,13 +72,13 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         verbose =True,
         llm = llm,
         max_retry_limit=2,
-        max_rpm=20,
+        max_rpm=10,
     )
     
     message_crafter = Agent(
         role="Message Crafter",
         goal=(
-            "Write 2 compelling and personalized 300 words emails for {outreach_purpose} at {company}, "
+            "Write compelling and personalized emails for {outreach_purpose} at {company}, "
             "highlighting the user's suitability as a {pitching_role}. Use the resume details dynamically."
         ),
         backstory="A creative communicator skilled at crafting engaging messages using available data.",
@@ -86,13 +86,13 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         verbose =True,
         llm = llm,
         max_retry_limit=2,
-        max_rpm=20,
+        max_rpm=10,
      )
     
      # Setup Tasks
     company_research_task = Task(
         description="Research relevant details about {company} in order to assess opportunites for {outreach_purpose}.",
-        expected_output="A list of 10 key insights about {company} and their suitability for {outreach_purpose}.",
+        expected_output="A list of 10 key insights about {company} and their suitability for {outreach_purpose}.Each insight should be less 280 characters long. ",
         agent=company_researcher,
     )
     industry_research_task = Task(
@@ -109,7 +109,7 @@ def initialize_crew(anthropic_api_key,serper_api_key):
     
     message_crafting_task = Task(
         description=(
-            "Craft a personalized email for {outreach_purpose} in the based on your knowledge of the {industry} industry and insights on {company}, "
+            "Craft a personalized email with less than 300 words for {outreach_purpose} in the based on your knowledge of the {industry} industry and insights on {company}, "
             "contact details, and dynamically retrieved resume details."
         ),
         expected_output=(
