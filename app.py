@@ -33,7 +33,7 @@ def main():
     
     serper_api_key = os.getenv("SERPER_API_KEY")
     
-    crew = initialize_crew(anthropic_api_key,serper_api_key)
+    crew_instance = initialize_crew(anthropic_api_key,serper_api_key)
     
     # Page title and configuration
     st.set_page_config(
@@ -122,7 +122,7 @@ def main():
             with st.spinner("🔍 Researching and crafting your application..."):
                 try:
                     # Execute crew
-                    raw_result = crew.kickoff(inputs=inputs)
+                    raw_result = crew_instance.kickoff(inputs=inputs)
                     
                     # Display results in organized tabs
                     st.success("✨ Application materials generated successfully!")
