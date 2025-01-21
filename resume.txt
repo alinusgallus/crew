@@ -1,0 +1,71 @@
+I am a product leader with a 15-year track record of leveraging technology to solve business problems. I am proficient in leading agile cross-functional teams, implementing lean practices, and fostering stakeholder engagement. My experience spans early-stage startups, large corporations, and the nonprofit sector. Having worked with product teams of varying sizes on web and mobile applications and embedded systems, I consider myself a generalist, helping teams iterate and deliver value.
+Core Competencies
+● Product Strategy & Roadmap
+● Agile & Lean Methodologies
+● Cross-functional Team Leadership
+● Stakeholder Engagement & Client Relations
+● User Feedback Integration & Product Enhancement
+● Data Analytics & Metrics Monitoring
+● Regulatory Compliance (Financial services, GDPR)
+Professional Experience Head of Digital Transformation
+International Disability Alliance (Non-Profit)
+Geneva (remote) (2021 – 2023)
+Led technological initiatives to optimize operational conduct in a remote, distributed, non-technical team with high accessibility requirements.
+Key Achievements:
+● Deployed an online training platform, expanding face-to-face training capabilities, training over 800 members of organizations of persons with disabilities(OPD).
+● Led migration to Microsoft Office, optimizing tool usage and reducing IT costs by over 40% while improving security.
+● Instituted robust GDPR compliance measures through audits, policy formulations, and training initiatives.
+● Supported other teams in their digital initiatives (vendor selection, partnerships etc.)
+ 
+ Product Manager
+Cenareo (Cloud-based digital signage solution)
+Toulouse, France (2019 – 2021)
+Built and led the product function, shifting focus from SMBs to Enterprise clients and addressing larger client challenges.
+Key Responsibilities:
+● Guided product development teams, leveraging comprehensive product management expertise.
+● Drove consensus on product roadmap and stakeholder alignment using OKR methodology.
+● Orchestrated product strategy workshops, fostering coherent vision among enterprise leadership teams.
+● Monitored product metrics using Jupyter and Pandas for device connectivity, screen usage, and content renewal.
+Senior Product Manager
+Pivotal (Consulting)
+Singapore (2017 – 2018)
+Supported product initiatives with major corporations( DBS, DELL, PAS) and mentored client Product Managers.
+Key Achievements:
+● Led cross-functional teams of Engineers, Product Managers, and Designers.
+● Championed agile development methodologies and product practices, including Lean
+and User-Centered Design.
+● Restructured team dynamics and implemented best practices for internal growth.
+● Supported pre-sales and project scoping
+Product Owner
+Viseo (Consulting)
+Singapore (2017)
+● Supported MVP factory activity within the digital team (pre-sales, proof of concept, scoping)
+● Led a Shopify-based e-commerce project for a leading Singaporean retail store.
+  
+Mobile Product Owner
+iCarAsia (App offering a large inventory of new and used cars) Kuala Lumpur (2015 – 2017)
+Directed development and release of Android and iOS mobile applications across three countries.
+Key Achievements:
+● Launched six applications across three countries, serving over 6000 daily active users and generating 300 leads daily.
+● Set up user research and data analytics to inform mobile product roadmap. Product Manager
+Yakimbi (File-sharing solution)
+Kuala Lumpur, Malaysia (2012 – 2014)
+● Acted as product owner and scrum master for Yakimbi's product - a Bank Negara Malaysia compliant file sharing application.
+● Coordinated backend, mobile, design, and QA teams.
+● Prioritized bug resolution, improvements, and feature development.
+● Managed product life cycle from planning to tactical activities.
+Product Manager
+Sciforma (Saas solution for portfolio and Project management)
+Paris, France (2008 – 2012)
+● Led the release of Sciforma 4.0 in Europe.
+● Conducted programs for product enhancements.
+● Defined and pushed new features based on customer feedback.
+Education
+● Bachelor of Science - Information Systems and Operations Management George Mason University — School of Management, Fairfax VA, USA
+● Baccalauréat Scientifique
+Lycée Descartes — Antony, France
+● Machine Learning Specialization from Stanford - Coursera Languages
+ 
+● French: Native
+● English: Fluent
+● Spanish: Basic
