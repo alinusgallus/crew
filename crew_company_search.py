@@ -134,14 +134,5 @@ def initialize_crew(anthropic_api_key,serper_api_key):
     }
     return Crew
 
-# Step 7: Run the Crew and Validate Data with Pydantic
-try:
-    raw_result = crew.kickoff(inputs=inputs)
-except Exception as e:
-    st.error(f"An error occurred while executing the crew: {e}")
-    raise
 
-
-st.write("### Raw Results")
-st.json(raw_result)
 
