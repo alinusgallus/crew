@@ -120,6 +120,7 @@ def initialize_crew(anthropic_api_key,serper_api_key):
         "'email_draft': 'The complete email content'"
         "}"
         ),
+        agent=message_crafter
     )
     
     
