@@ -116,7 +116,6 @@ inputs = {
 raw_result = crew.kickoff(inputs=inputs)
 
 # Validate the result with Pydantic
-raw_result = crew.kickoff(inputs=inputs)
 print("\n=== Raw Result ===")
 print(raw_result)
 print("\n=== Type of Result ===")
