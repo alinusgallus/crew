@@ -18,6 +18,19 @@ def pdf_to_text(uploaded_file):
         return None
 
 def main():
+    # Set your API key
+
+    os.environ['ANTHROPIC_API_KEY'] = st.secrets['ANTHROPIC_API_KEY']
+    os.environ["SERPER_API_KEY"] = st.secrets['SERPER_API_KEY']
+
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not anthropic_api_key:
+        raise ValueError("ANTHROPIC_API_KEY is not set. Please check your Streamlit secrets or environment configuration.")
+    
+    serper_api_key = os.getenv("SERPER_API_KEY")
+    
+    crew = initialize_crew(anthropic_api_key,serper_api_key)
+    
     # Page title and configuration
     st.set_page_config(
         page_title="AI Job Application Assistant",
