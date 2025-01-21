@@ -112,8 +112,14 @@ def initialize_crew(anthropic_api_key,serper_api_key):
             "Craft a personalized email for {outreach_purpose} in the based on your knowledge of the {industry} industry and insights on {company}, "
             "contact details, and dynamically retrieved resume details."
         ),
-        expected_output="A polished,concise,2 paragraph long, ready-to-send personalized email highlighting suitability as a {pitching_role}.",
-        agent=message_crafter,
+        expected_output=(
+        "Return response in JSON format: {"
+        "'company_research': 'Key company insights',"
+        "'industry_insights': 'Industry analysis',"
+        "'contacts': ['List of relevant contacts'],"
+        "'email_draft': 'The complete email content'"
+        "}"
+        ),
     )
     
     
