@@ -51,7 +51,8 @@ company_researcher = Agent(
     tools=[web_search_tool],
     verbose =True,
     llm = llm,
-    max_retry_limit=2
+    max_retry_limit=2,
+    max_rpm=20,
 )
 
 contact_finder = Agent(
@@ -61,7 +62,8 @@ contact_finder = Agent(
     tools=[web_search_tool],
     verbose =True,
     llm = llm,
-    max_retry_limit=2
+    max_retry_limit=2,
+    max_rpm=20,
 )
 
 message_crafter = Agent(
@@ -74,7 +76,8 @@ message_crafter = Agent(
     tools=[resume_tool,web_search_tool],
     verbose =True,
     llm = llm,
-    max_retry_limit=2
+    max_retry_limit=2,
+    max_rpm=20,
  )
 
  # Setup Tasks
