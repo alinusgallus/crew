@@ -34,6 +34,14 @@ class CompanyData(BaseModel):
 
  # Setup agents
 def initialize_crew(anthropic_api_key, serper_api_key):
+
+    llm = LLM(
+        api_key=anthropic_api_key,
+        model="anthropic/claude-3-5"  
+    )
+    
+    resume_tool = FileReadTool(file_path="resume.txt")
+    web_search_tool = SerperDevTool(api_key=serper_api_key)
     # Define agents (same as before)
     company_researcher = Agent(
         role="Company Researcher",
