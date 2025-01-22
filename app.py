@@ -126,8 +126,6 @@ def parse_contacts(text: str) -> List[Dict[str, str]]:
 
 def update_tabs_with_content(result):
     """Update tabs with CrewAI results."""
-    tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
-    
     try:
         # Convert CrewOutput to dictionary format
         result_dict = result.model_dump() if hasattr(result, 'model_dump') else {}
@@ -147,7 +145,7 @@ def update_tabs_with_content(result):
                 email_output = tasks[2]['raw']
         
         # Display Research Tab
-        with tab1:
+        with st.tabs("📊 Research")[0]:  # Use existing tab
             st.subheader("Company & Industry Research")
             if research_output:
                 try:
@@ -164,7 +162,7 @@ def update_tabs_with_content(result):
                 st.warning("No research data available")
 
         # Display Contacts Tab
-        with tab2:
+        with st.tabs("👥 Contacts")[1]:  # Use existing tab
             st.subheader("Key Contacts")
             if contact_output:
                 try:
@@ -185,7 +183,7 @@ def update_tabs_with_content(result):
                 st.warning("No contact data available")
 
         # Display Email Tab
-        with tab3:
+        with st.tabs("✉️ Email")[2]:  # Use existing tab
             st.subheader("Email Draft")
             if email_output:
                 try:
@@ -273,7 +271,7 @@ def main():
             help="Select your primary outreach goal"
         )
 
-    # Generate button
+    # Generate button and results
     if st.button("🚀 Generate Application Materials", type="primary"):
         if not uploaded_file:
             st.error("⚠️ Please upload your resume first!")
@@ -322,8 +320,6 @@ def main():
                         
                     st.session_state.crew_result = result
                     st.session_state.generation_complete = True
-                    
-                    update_tabs_with_content(result)
                     st.success("✨ Application materials generated successfully!")
                 except Exception as e:
                     st.error(f"Error during generation: {str(e)}")
@@ -340,9 +336,10 @@ def main():
             except Exception as e:
                 st.warning(f"Could not remove temporary file: {str(e)}")
 
-    # Show results or placeholders
+    # Show results or placeholders - AFTER the generate button
+    tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
+    
     if not st.session_state.generation_complete:
-        tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
         with tab1:
             st.info("Company and industry research will appear here.")
         with tab2:

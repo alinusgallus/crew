@@ -115,10 +115,6 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
                 - Growth opportunities
                 - Key challenges
                 - Local market dynamics
-
-                Required Skills:
-                - Technical skills
-                - Soft skills
                 - Industry-specific qualifications
                 - Local requirements/certifications
                 
