@@ -64,52 +64,74 @@ def update_tabs_with_content(result):
         
         # Display company research
         try:
-            company_insights = result.tasks[0].output
-            st.markdown("### Company Insights")
-            for insight in company_insights.key_insights:
-                st.markdown(f"• {insight}")
-        except (AttributeError, IndexError) as e:
-            st.info("Company research is being processed...")
+            if hasattr(result, 'tasks') and len(result.tasks) > 0:
+                company_research = result.tasks[0].output
+                if isinstance(company_research, dict):
+                    st.markdown("### Company Insights")
+                    insights = company_research.get('key_insights', [])
+                    for insight in insights:
+                        st.markdown(f"• {insight}")
+                else:
+                    st.markdown("### Company Insights")
+                    st.markdown(str(company_research))
             
-        # Display industry research
-        try:
-            industry_insights = result.tasks[1].output
-            st.markdown("### Industry Insights")
-            for insight in industry_insights.key_insights:
-                st.markdown(f"• {insight}")
-        except (AttributeError, IndexError) as e:
-            st.info("Industry research is being processed...")
+            if hasattr(result, 'tasks') and len(result.tasks) > 1:
+                industry_research = result.tasks[1].output
+                if isinstance(industry_research, dict):
+                    st.markdown("### Industry Insights")
+                    insights = industry_research.get('key_insights', [])
+                    for insight in insights:
+                        st.markdown(f"• {insight}")
+                else:
+                    st.markdown("### Industry Insights")
+                    st.markdown(str(industry_research))
+        except Exception as e:
+            st.error(f"Error displaying research: {str(e)}")
+            st.info("Some research results may not be available.")
 
     with tab2:
         st.subheader("Key Contacts")
         try:
-            contacts = result.tasks[2].output.contacts
-            for contact in contacts:
-                with st.expander(f"{contact.name} - {contact.role}"):
-                    st.markdown(f"**Role:** {contact.role}")
-                    if contact.email:
-                        st.markdown(f"**Email:** {contact.email}")
-        except (AttributeError, IndexError) as e:
-            st.info("Contact information is being processed...")
+            if hasattr(result, 'tasks') and len(result.tasks) > 2:
+                contacts_data = result.tasks[2].output
+                if isinstance(contacts_data, dict) and 'contacts' in contacts_data:
+                    for contact in contacts_data['contacts']:
+                        if isinstance(contact, dict):
+                            with st.expander(f"{contact.get('name', 'Unknown')} - {contact.get('role', 'Unknown Role')}"):
+                                st.markdown(f"**Role:** {contact.get('role', 'N/A')}")
+                                if contact.get('email'):
+                                    st.markdown(f"**Email:** {contact['email']}")
+                else:
+                    st.markdown(str(contacts_data))
+        except Exception as e:
+            st.error(f"Error displaying contacts: {str(e)}")
+            st.info("Contact information may not be available.")
 
     with tab3:
         st.subheader("Email Draft")
         try:
-            email_draft = result.tasks[3].output.email_draft
-            st.text_area(
-                "Email Content",
-                value=email_draft,
-                height=300,
-                key="email_content"
-            )
-            
-            col1, col2 = st.columns([1, 4])
-            with col1:
-                if st.button("📋 Copy"):
-                    st.code(email_draft)
-                    st.success("Copied to clipboard!")
-        except (AttributeError, IndexError) as e:
-            st.info("Email draft is being processed...")
+            if hasattr(result, 'tasks') and len(result.tasks) > 3:
+                email_data = result.tasks[3].output
+                if isinstance(email_data, dict) and 'email_draft' in email_data:
+                    email_content = email_data['email_draft']
+                else:
+                    email_content = str(email_data)
+                
+                st.text_area(
+                    "Email Content",
+                    value=email_content,
+                    height=300,
+                    key="email_content"
+                )
+                
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    if st.button("📋 Copy"):
+                        st.code(email_content)
+                        st.success("Copied to clipboard!")
+        except Exception as e:
+            st.error(f"Error displaying email draft: {str(e)}")
+            st.info("Email draft may not be available.")
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -174,10 +196,11 @@ def main():
             resume_path.write_text(resume_text)
             
             # Initialize CrewAI
-            crew_instance = initialize_crew(
-                anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
-                serper_api_key=st.secrets['SERPER_API_KEY']
-            )
+            with st.spinner("Initializing AI agents..."):
+                crew_instance = initialize_crew(
+                    anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
+                    serper_api_key=st.secrets['SERPER_API_KEY']
+                )
             
             inputs = {
                 "industry": industry,
