@@ -51,7 +51,7 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             raise ValueError("Missing required API keys")
         
         # Set required environment variables
-        llm = LLM(anthropic_api_key = anthropic_api_key, model="anthropic/claude-3-sonnet-20240229")
+        llm = LLM(api_key = anthropic_api_key, model="anthropic/claude-3-sonnet-20240229")
 
         
         # Create tools
