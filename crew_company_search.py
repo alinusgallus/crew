@@ -18,19 +18,23 @@ litellm.set_verbose = True
 
 
 class CompanyInsight(BaseModel):
-    name: str
-    industry_focus: str
-    key_challenges: str
-    recent_news: str
+    company_name: str
+    key_insights: List[str]
+
+class IndustryInsight(BaseModel):
+    industry_name: str
+    key_insights: List[str]
 
 class Contact(BaseModel):
     name: str
     role: str
-    email: Optional[str] = None  # Email is optional
+    email: Optional[str] = None
 
-class CompanyData(BaseModel):
-    company_insights: Dict[str, CompanyInsight]
-    contacts: Dict[str, List[Contact]]
+class ContactsOutput(BaseModel):
+    contacts: List[Contact]
+
+class EmailDraft(BaseModel):
+    email_draft: str
 
  # Setup agents
 def initialize_crew(anthropic_api_key, serper_api_key):
