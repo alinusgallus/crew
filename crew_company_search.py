@@ -48,28 +48,28 @@ def initialize_crew(anthropic_api_key, serper_api_key):
         goal="Gather insights about {company} and its industry.",
         backstory="A skilled researcher focused on company analysis.",
         verbose=True,
-        llm=LLM(api_key=anthropic_api_key),
+        llm=llm,
     )
     industry_researcher = Agent(
         role="Industry Researcher",
         goal="Analyze trends and insights in the {industry} industry.",
         backstory="An expert in industry analysis.",
         verbose=True,
-        llm=LLM(api_key=anthropic_api_key),
+        llm=llm,
     )
     contact_finder = Agent(
         role="Contact Finder",
         goal="Identify relevant contacts at {company}.",
         backstory="A professional networker skilled at finding key personnel.",
         verbose=True,
-        llm=LLM(api_key=anthropic_api_key),
+        llm=llm,
     )
     message_crafter = Agent(
         role="Message Crafter",
         goal="Draft personalized emails for outreach.",
         backstory="An expert communicator focused on creating engaging messages.",
         verbose=True,
-        llm=LLM(api_key=anthropic_api_key),
+        llm=llm,
     )
     
     # Define tasks with output schemas
