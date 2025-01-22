@@ -138,32 +138,16 @@ def update_tabs_with_content(result):
         contact_output = None
         email_output = None
         
-        # Try different ways to extract the data
-        if result:
-            if hasattr(result, 'pydantic') and hasattr(result.pydantic, 'tasks'):
-                research_output = result.pydantic.tasks[0].output
-                contact_output = result.pydantic.tasks[1].output
-                email_output = result.pydantic.tasks[2].output
-            elif hasattr(result, 'tasks'):
-                if isinstance(result.tasks, list) and len(result.tasks) >= 3:
-                    research_output = result.tasks[0].output
-                    contact_output = result.tasks[1].output
-                    email_output = result.tasks[2].output
-            elif isinstance(result, dict):
-                if 'tasks' in result:
-                    tasks = result['tasks']
-                    if len(tasks) >= 3:
-                        research_output = tasks[0].get('output', '')
-                        contact_output = tasks[1].get('output', '')
-                        email_output = tasks[2].get('output', '')
-                else:
-                    # Try to get outputs directly from dict
-                    research_output = result.get('research_output', '')
-                    contact_output = result.get('contact_output', '')
-                    email_output = result.get('email_output', '')
-            elif isinstance(result, str):
-                # If result is a single string, show it in all tabs
-                research_output = contact_output = email_output = result
+        # Handle CrewOutput object
+        if hasattr(result, 'tasks_output') and result.tasks_output:
+            tasks = result.tasks_output
+            if len(tasks) >= 3:
+                research_output = tasks[0].output
+                contact_output = tasks[1].output
+                email_output = tasks[2].output
+        elif hasattr(result, 'raw') and result.raw:
+            # If we only have raw output, use it for all tabs
+            research_output = contact_output = email_output = result.raw
         
         # Display Research Tab
         with tab1:
@@ -181,8 +165,6 @@ def update_tabs_with_content(result):
                     st.markdown(research_output)
             else:
                 st.warning("No research data available")
-                st.markdown("Raw output:")
-                st.write(result)
 
         # Display Contacts Tab
         with tab2:
@@ -200,8 +182,6 @@ def update_tabs_with_content(result):
                     st.markdown(contact_output)
             else:
                 st.warning("No contact data available")
-                st.markdown("Raw output:")
-                st.write(result)
 
         # Display Email Tab
         with tab3:
@@ -225,13 +205,14 @@ def update_tabs_with_content(result):
                     st.markdown(email_output)
             else:
                 st.warning("No email draft available")
-                st.markdown("Raw output:")
-                st.write(result)
 
     except Exception as e:
         st.error(f"Error updating content: {str(e)}")
         st.error("Raw result structure:")
-        st.write(result)
+        if hasattr(result, 'raw'):
+            st.markdown(result.raw)
+        else:
+            st.write(result)
 
 def main():
     st.title("AI Job Application Assistant 💼")
