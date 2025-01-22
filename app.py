@@ -295,7 +295,12 @@ def main():
                 try:
                     crew_instance = initialize_crew(
                         anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
-                        serper_api_key=st.secrets['SERPER_API_KEY']
+                        serper_api_key=st.secrets['SERPER_API_KEY'],
+                        company=company,
+                        industry=industry,
+                        pitching_role=pitching_role,
+                        country=country,
+                        outreach_purpose=outreach_purpose
                     )
                 except Exception as e:
                     st.error(f"Failed to initialize AI agents: {str(e)}")

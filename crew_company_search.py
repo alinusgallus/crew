@@ -41,7 +41,15 @@ def create_tools(serper_api_key: str) -> Dict[str, Any]:
     except Exception as e:
         raise Exception(f"Error creating tools: {str(e)}")
 
-def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
+def initialize_crew(
+    anthropic_api_key: str, 
+    serper_api_key: str,
+    company: str = "",
+    industry: str = "",
+    pitching_role: str = "",
+    country: str = "",
+    outreach_purpose: str = ""
+) -> Crew:
     """
     Initialize CrewAI with robust error handling and validated configuration.
     """
