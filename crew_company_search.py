@@ -99,7 +99,11 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             agent=company_researcher,
             output_schema=CompanyResearch,
             expected_output="Structured company insights with key findings.",
-            context="Focus on information relevant to job seekers."
+            context=[
+                "Focus on information relevant to job seekers",
+                "Look for recent company developments",
+                "Identify company culture and values"
+            ]
         ),
         
         Task(
@@ -110,7 +114,12 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             Return insights as an IndustryResearch object.""",
             agent=industry_researcher,
             output_schema=IndustryResearch,
-            expected_output="Structured industry analysis with key trends."
+            expected_output="Structured industry analysis with key trends.",
+            context=[
+                "Focus on recent industry trends",
+                "Identify key skills and qualifications",
+                "Look for growth areas and opportunities"
+            ]
         ),
         
         Task(
@@ -119,7 +128,12 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             Return as a ContactResearch object.""",
             agent=contact_finder,
             output_schema=ContactResearch,
-            expected_output="List of relevant contacts with their roles."
+            expected_output="List of relevant contacts with their roles.",
+            context=[
+                "Focus on finding hiring managers",
+                "Look for team leads in relevant departments",
+                "Identify decision makers for the target role"
+            ]
         ),
         
         Task(
@@ -130,7 +144,12 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             Return as an EmailDraft object.""",
             agent=message_crafter,
             output_schema=EmailDraft,
-            expected_output="Personalized email draft for company outreach."
+            expected_output="Personalized email draft for company outreach.",
+            context=[
+                "Use insights from company research",
+                "Highlight relevant experience",
+                "Keep the tone professional but personal"
+            ]
         )
     ]
     
