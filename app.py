@@ -87,50 +87,35 @@ def update_tabs_with_content(result_dict):
     
     with tab1:
         st.subheader("Company Insights")
-        if isinstance(result_dict, dict):
-            if "company_research" in result_dict:
-                st.markdown(result_dict["company_research"])
-            if "industry_insights" in result_dict:
-                st.markdown("### Industry Analysis")
-                st.markdown(result_dict["industry_insights"])
-        else:
-            st.markdown(str(result_dict))
+        if "company_research" in result_dict:
+            insights = result_dict["company_research"]
+            if isinstance(insights, list):
+                for i, insight in enumerate(insights, 1):
+                    st.markdown(f"**Insight {i}:** {insight}")
+            else:
+                st.markdown(insights)
 
     with tab2:
         st.subheader("Key Contacts")
-        if isinstance(result_dict, dict) and "contacts" in result_dict:
+        if "contacts" in result_dict:
             contacts = result_dict["contacts"]
             if isinstance(contacts, list):
                 for contact in contacts:
-                    with st.expander(contact.split(":")[0] if ":" in contact else contact):
-                        st.markdown(contact)
-            elif isinstance(contacts, str):
-                st.markdown(contacts)
+                    with st.expander(contact.get("name", "Unknown Contact")):
+                        st.markdown(f"**Role:** {contact.get('role', 'N/A')}")
+                        st.markdown(f"**Email:** {contact.get('email', 'N/A')}")
             else:
-                st.markdown(str(contacts))
+                st.markdown(contacts)
 
     with tab3:
         st.subheader("Email Draft")
-        if isinstance(result_dict, dict) and "email_draft" in result_dict:
+        if "email_draft" in result_dict:
             email_content = result_dict["email_draft"]
-            if isinstance(email_content, str):
-                if email_content.startswith("Subject:"):
-                    subject, body = email_content.split("\n", 1)
-                    st.markdown("**" + subject.strip() + "**")
-                    email_content = body.strip()
-                
-                email_area = st.text_area(
-                    "Email Content",
-                    value=email_content,
-                    height=300,
-                    key="email_content"
-                )
-                
-                col1, col2, col3 = st.columns([1, 1, 1])
-                with col2:
-                    if st.button("📋 Copy to Clipboard"):
-                        st.code(email_content)
-                        st.success("Email copied!")
+            st.text_area("Email Content", value=email_content, height=300, key="email_content")
+
+            if st.button("📋 Copy to Clipboard"):
+                st.code(email_content)
+                st.success("Email copied!")
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -217,13 +202,11 @@ def main():
                 with st.spinner("🔍 Researching and crafting your application..."):
                     raw_result = crew_instance.kickoff(inputs=inputs)
                     
-                    if raw_result is not None:
-                        json_file = save_json_results(raw_result)
+                    if raw_result:
+                        # Convert Pydantic models to dictionaries
+                        result_dict = {key: value.dict() for key, value in raw_result.items()}
                         
-                        with open(json_file, "r") as f:
-                            result_dict = json.load(f)
-                        
-                        st.session_state.generation_complete = True
+                        json_file = save_json_results(result_dict)
                         update_tabs_with_content(result_dict)
                         st.success("✨ Application materials generated successfully!")
                     
