@@ -129,9 +129,9 @@ def update_tabs_with_content(result):
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     try:
-        research_output = result.tasks[0].output
-        contact_output = result.tasks[1].output
-        email_output = result.tasks[2].output
+        research_output = result.pydantic.tasks[0].output
+        contact_output = result.pydantic.tasks[1].output
+        email_output = result.pydantic.tasks[2].output
 
         with tab1:
             st.subheader("Company & Industry Research")
