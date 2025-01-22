@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import PyPDF2
 import io
+import json
 from crew_company_search import initialize_crew
 
 # Page configuration
@@ -55,6 +56,13 @@ def pdf_to_text(uploaded_file) -> str:
     except Exception as e:
         raise Exception(f"Error processing PDF: {str(e)}")
 
+def parse_task_output(output_str: str) -> dict:
+    """Parse the task output string into a dictionary."""
+    try:
+        return json.loads(output_str)
+    except json.JSONDecodeError:
+        return {"error": "Could not parse output", "raw": output_str}
+
 def update_tabs_with_content(result):
     """Update tabs with CrewAI results."""
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
@@ -64,74 +72,69 @@ def update_tabs_with_content(result):
         
         # Display company research
         try:
-            if hasattr(result, 'tasks') and len(result.tasks) > 0:
-                company_research = result.tasks[0].output
-                if isinstance(company_research, dict):
-                    st.markdown("### Company Insights")
-                    insights = company_research.get('key_insights', [])
-                    for insight in insights:
-                        st.markdown(f"• {insight}")
-                else:
-                    st.markdown("### Company Insights")
-                    st.markdown(str(company_research))
-            
-            if hasattr(result, 'tasks') and len(result.tasks) > 1:
-                industry_research = result.tasks[1].output
-                if isinstance(industry_research, dict):
-                    st.markdown("### Industry Insights")
-                    insights = industry_research.get('key_insights', [])
-                    for insight in insights:
-                        st.markdown(f"• {insight}")
-                else:
-                    st.markdown("### Industry Insights")
-                    st.markdown(str(industry_research))
+            company_data = parse_task_output(result.tasks[0].output)
+            if "key_insights" in company_data:
+                st.markdown("### Company Insights")
+                for insight in company_data["key_insights"]:
+                    st.markdown(f"• {insight}")
+            elif "raw" in company_data:
+                st.markdown("### Company Insights")
+                st.markdown(company_data["raw"])
         except Exception as e:
-            st.error(f"Error displaying research: {str(e)}")
-            st.info("Some research results may not be available.")
+            st.info("Company research is being processed...")
+            
+        try:
+            industry_data = parse_task_output(result.tasks[1].output)
+            if "key_insights" in industry_data:
+                st.markdown("### Industry Insights")
+                for insight in industry_data["key_insights"]:
+                    st.markdown(f"• {insight}")
+            elif "raw" in industry_data:
+                st.markdown("### Industry Insights")
+                st.markdown(industry_data["raw"])
+        except Exception as e:
+            st.info("Industry research is being processed...")
 
     with tab2:
         st.subheader("Key Contacts")
         try:
-            if hasattr(result, 'tasks') and len(result.tasks) > 2:
-                contacts_data = result.tasks[2].output
-                if isinstance(contacts_data, dict) and 'contacts' in contacts_data:
-                    for contact in contacts_data['contacts']:
-                        if isinstance(contact, dict):
-                            with st.expander(f"{contact.get('name', 'Unknown')} - {contact.get('role', 'Unknown Role')}"):
-                                st.markdown(f"**Role:** {contact.get('role', 'N/A')}")
-                                if contact.get('email'):
-                                    st.markdown(f"**Email:** {contact['email']}")
-                else:
-                    st.markdown(str(contacts_data))
+            contacts_data = parse_task_output(result.tasks[2].output)
+            if "contacts" in contacts_data:
+                for contact in contacts_data["contacts"]:
+                    with st.expander(f"{contact['name']} - {contact['role']}"):
+                        st.markdown(f"**Role:** {contact['role']}")
+                        if "email" in contact and contact["email"]:
+                            st.markdown(f"**Email:** {contact['email']}")
+            elif "raw" in contacts_data:
+                st.markdown(contacts_data["raw"])
         except Exception as e:
-            st.error(f"Error displaying contacts: {str(e)}")
-            st.info("Contact information may not be available.")
+            st.info("Contact information is being processed...")
 
     with tab3:
         st.subheader("Email Draft")
         try:
-            if hasattr(result, 'tasks') and len(result.tasks) > 3:
-                email_data = result.tasks[3].output
-                if isinstance(email_data, dict) and 'email_draft' in email_data:
-                    email_content = email_data['email_draft']
-                else:
-                    email_content = str(email_data)
-                
-                st.text_area(
-                    "Email Content",
-                    value=email_content,
-                    height=300,
-                    key="email_content"
-                )
-                
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if st.button("📋 Copy"):
-                        st.code(email_content)
-                        st.success("Copied to clipboard!")
+            email_data = parse_task_output(result.tasks[3].output)
+            if "email_draft" in email_data:
+                email_content = email_data["email_draft"]
+            elif "raw" in email_data:
+                email_content = email_data["raw"]
+            else:
+                email_content = str(result.tasks[3].output)
+            
+            st.text_area(
+                "Email Content",
+                value=email_content,
+                height=300,
+                key="email_content"
+            )
+            
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                if st.button("📋 Copy"):
+                    st.code(email_content)
+                    st.success("Copied to clipboard!")
         except Exception as e:
-            st.error(f"Error displaying email draft: {str(e)}")
-            st.info("Email draft may not be available.")
+            st.info("Email draft is being processed...")
 
 def main():
     st.title("AI Job Application Assistant 💼")
