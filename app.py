@@ -175,9 +175,18 @@ def update_tabs_with_content(result, tabs):
                     contacts = parse_contacts(contact_output)
                     for contact in contacts:
                         with st.expander(f"{contact.get('Contact Name', 'Unknown')} - {contact.get('Role', 'Unknown Role')}"):
+                            # Display LinkedIn first if available
+                            if 'LinkedIn' in contact:
+                                st.markdown(f"**LinkedIn:** [{contact['LinkedIn']}]({contact['LinkedIn']})")
+                            
+                            # Display other fields
                             for key, value in contact.items():
-                                if key != 'Contact Name':
+                                if key not in ['Contact Name', 'LinkedIn']:  # Skip name and LinkedIn as they're handled separately
                                     st.markdown(f"**{key}:** {value}")
+                            
+                            # Add LinkedIn button if profile is available
+                            if 'LinkedIn' in contact and contact['LinkedIn']:
+                                st.markdown(f"[🔗 Open LinkedIn Profile]({contact['LinkedIn']})")
                 except Exception as e:
                     st.error(f"Error parsing contacts: {str(e)}")
                     st.markdown(contact_output)

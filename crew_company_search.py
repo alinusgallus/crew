@@ -141,9 +141,11 @@ def initialize_crew(
                 Role: [Current Role]
                 Location: [Country/Office]
                 Background: [Brief background]
+                LinkedIn: [LinkedIn profile URL if available]
                 Email: [Email if available]
 
                 Separate each contact with a blank line.
+                Make sure to include LinkedIn profiles when possible as they are important for outreach.
                 Focus on hiring managers and team leads.""",
             agent=contact_finder,
             expected_output="A list of 2-3 formatted contact profiles for relevant hiring managers or team leads."
