@@ -3,161 +3,201 @@ import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import os
-from typing import List, Optional
-from pydantic import BaseModel
-from crewai import Agent, Crew, Task, Process, LLM
-from crewai_tools import SerperDevTool, FileReadTool
-import litellm
+from typing import List, Optional, Dict, Any
+from crewai import Agent, Task, Crew, Process
+from crewai.tools import SerperDevTool, FileReadTool
+import json
 
-# Enable verbose logging for LiteLLM
-litellm.set_verbose = True
+def load_resume() -> str:
+    """Safely load resume content with error handling."""
+    try:
+        if not os.path.exists("resume.txt"):
+            raise FileNotFoundError("Resume file not found")
+        with open("resume.txt", "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        raise Exception(f"Error reading resume: {str(e)}")
 
-# Pydantic models for structured output
-class CompanyResearch(BaseModel):
-    company_name: str
-    key_insights: List[str]
-
-class IndustryResearch(BaseModel):
-    industry_name: str
-    key_insights: List[str]
-
-class Contact(BaseModel):
-    name: str
-    role: str
-    email: Optional[str] = None
-
-class ContactResearch(BaseModel):
-    contacts: List[Contact]
-
-class EmailDraft(BaseModel):
-    email_draft: str
+def create_tools(serper_api_key: str) -> Dict[str, Any]:
+    """Create and validate tools with error handling."""
+    try:
+        search_tool = SerperDevTool(
+            serper_api_key=serper_api_key,
+            retry_on_fail=True
+        )
+        
+        file_tool = FileReadTool(
+            file_path="resume.txt",
+            retry_on_fail=True
+        )
+        
+        return {
+            "search": search_tool,
+            "resume": file_tool
+        }
+    except Exception as e:
+        raise Exception(f"Error creating tools: {str(e)}")
 
 def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
     """
-    Initialize a CrewAI instance with configured agents and tasks.
+    Initialize CrewAI with robust error handling and validated configuration.
     """
-    # Initialize LLM
-    llm = LLM(
-        api_key=anthropic_api_key,
-        model='anthropic/claude-3-5-sonnet-20240620'
-    )
-    
-    # Initialize tools
-    resume_tool = FileReadTool(file_path="resume.txt")
-    web_search_tool = SerperDevTool(api_key=serper_api_key)
-    
-    # Define agents
-    company_researcher = Agent(
-        role="Company Researcher",
-        goal="Research and analyze {company} to identify key information and recent developments.",
-        backstory="""Expert business researcher skilled at finding and analyzing company information.
-        You focus on recent developments, company culture, and business strategies.""",
-        verbose=True,
-        llm=llm,
-        tools=[web_search_tool, resume_tool]
-    )
-    
-    industry_researcher = Agent(
-        role="Industry Researcher",
-        goal="Analyze the {industry} industry landscape and identify key trends.",
-        backstory="""Industry analysis expert who identifies market trends, challenges, and opportunities.
-        You provide context about industry dynamics and competitive landscapes.""",
-        verbose=True,
-        llm=llm,
-        tools=[web_search_tool]
-    )
-    
-    contact_finder = Agent(
-        role="Contact Finder",
-        goal="Find relevant contacts at {company}.",
-        backstory="""Expert at identifying key personnel within organizations.
-        You focus on finding decision-makers relevant to the job seeker's interests.""",
-        verbose=True,
-        llm=llm,
-        tools=[web_search_tool]
-    )
-    
-    message_crafter = Agent(
-        role="Message Crafter",
-        goal="Create a compelling outreach message for {company} contacts.",
-        backstory="""Professional communications expert who crafts personalized outreach messages.
-        You create engaging emails that highlight relevant experience and show genuine interest.""",
-        verbose=True,
-        llm=llm,
-        tools=[resume_tool]
-    )
-    
-    # Define tasks with output schemas
-    tasks = [
-        Task(
-            description="""Research {company} and return as a JSON object with:
-            - company_name: the company name
-            - key_insights: a list of key findings about recent developments, culture, products, and growth""",
-            agent=company_researcher,
-            output_json=True,
-            output_schema=CompanyResearch
-        ),
+    try:
+        # Validate API keys
+        if not anthropic_api_key or not serper_api_key:
+            raise ValueError("Missing required API keys")
         
-        Task(
-            description="""Analyze the {industry} industry and return as a JSON object with:
-            - industry_name: the industry name
-            - key_insights: a list of trends, challenges, and opportunities""",
-            agent=industry_researcher,
-            output_json=True,
-            output_schema=IndustryResearch
-        ),
+        # Set required environment variables
+        os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
         
-        Task(
-            description="""Find 2-3 contacts at {company} and return as a JSON object with:
-            - contacts: a list of contact objects, each with:
-              - name: the contact's name
-              - role: their role at the company
-              - email: their email if available""",
-            agent=contact_finder,
-            output_json=True,
-            output_schema=ContactResearch
-        ),
+        # Create tools
+        tools = create_tools(serper_api_key)
         
-        Task(
-            description="""Create an email draft and return as a JSON object with:
-            - email_draft: the complete email text""",
-            agent=message_crafter,
-            output_json=True,
-            output_schema=EmailDraft
+        # Validate resume exists
+        load_resume()
+        
+        # Create researcher agent
+        researcher = Agent(
+            role="Research Specialist",
+            goal="Gather comprehensive information about the target company and industry",
+            backstory="""Expert business researcher with years of experience analyzing 
+            companies and industries. You excel at finding key information about company 
+            culture, recent developments, and industry trends.""",
+            tools=[tools["search"]],
+            verbose=True,
+            allow_delegation=False
         )
-    ]
-    
-    # Create crew
-    crew = Crew(
-        agents=[company_researcher, industry_researcher, contact_finder, message_crafter],
-        tasks=tasks,
-        process=Process.sequential,
-        verbose=True,
-        memory=False
-    )
-    
-    return crew
+        
+        # Create contact finder agent
+        contact_finder = Agent(
+            role="Contact Specialist",
+            goal="Identify appropriate hiring managers and decision makers",
+            backstory="""Expert at finding relevant contacts within organizations. 
+            You focus on identifying hiring managers and team leaders who would be 
+            involved in the hiring process.""",
+            tools=[tools["search"]],
+            verbose=True,
+            allow_delegation=False
+        )
+        
+        # Create email writer agent
+        writer = Agent(
+            role="Communications Expert",
+            goal="Craft compelling and personalized outreach messages",
+            backstory="""Professional writer specializing in job search communications. 
+            You excel at creating engaging, personalized messages that highlight relevant 
+            experience and generate responses.""",
+            tools=[tools["resume"]],
+            verbose=True,
+            allow_delegation=False
+        )
+        
+        # Research task
+        research = Task(
+            description="""Analyze {company} and the {industry} industry.
+            Provide information in the following format:
+
+            Company Overview:
+            - Key facts about the company
+            - Recent developments
+            - Company culture and values
+
+            Industry Analysis:
+            - Current trends
+            - Growth opportunities
+            - Key challenges
+
+            Required Skills:
+            - Technical skills
+            - Soft skills
+            - Industry-specific qualifications
+            
+            Provide ONLY these sections, with bullet points for each item.""",
+            agent=researcher,
+            expected_output="A structured analysis with Company Overview, Industry Analysis, and Required Skills sections."
+        )
+        
+        # Contact task
+        contacts = Task(
+            description="""Find 2-3 relevant contacts at {company} for the {pitching_role} position.
+            Format each contact as:
+
+            Contact Name: [Full Name]
+            Role: [Current Role]
+            Background: [Brief background]
+            Email: [Email if available]
+
+            Separate each contact with a blank line.
+            Focus on hiring managers and team leads.""",
+            agent=contact_finder,
+            expected_output="A list of 2-3 formatted contact profiles for relevant hiring managers or team leads."
+        )
+        
+        # Email task
+        email = Task(
+            description="""Write a personalized outreach email for {company}.
+            
+            Use this exact structure:
+            ---
+            Subject: [Clear subject line]
+
+            Dear [Contact's Name],
+
+            [Opening with specific company detail]
+
+            [Paragraph about relevant experience]
+
+            [Closing with clear call to action]
+
+            Best regards,
+            [Your name]
+            ---
+            
+            Keep the total length under 200 words.
+            Use information from the research and resume.""",
+            agent=writer,
+            expected_output="A formatted email following the specified structure."
+        )
+        
+        # Create crew
+        crew = Crew(
+            agents=[researcher, contact_finder, writer],
+            tasks=[research, contacts, email],
+            process=Process.sequential,
+            verbose=True
+        )
+        
+        return crew
+        
+    except Exception as e:
+        raise Exception(f"Error initializing crew: {str(e)}")
 
 if __name__ == "__main__":
-    # Example usage
-    api_keys = {
-        "anthropic": os.getenv("ANTHROPIC_API_KEY"),
-        "serper": os.getenv("SERPER_API_KEY")
-    }
-    
-    crew_instance = initialize_crew(
-        anthropic_api_key=api_keys["anthropic"],
-        serper_api_key=api_keys["serper"]
-    )
-    
-    # Example inputs
-    inputs = {
-        "company": "Example Corp",
-        "industry": "Technology",
-        "pitching_role": "Software Engineer",
-        "outreach_purpose": "job opportunities"
-    }
-    
-    # Run the crew
-    result = crew_instance.kickoff(inputs=inputs)
-    print(result)
+    try:
+        # Test configuration
+        api_keys = {
+            "anthropic": os.getenv("ANTHROPIC_API_KEY"),
+            "serper": os.getenv("SERPER_API_KEY")
+        }
+        
+        if not all(api_keys.values()):
+            raise ValueError("Missing required API keys in environment variables")
+        
+        crew = initialize_crew(
+            anthropic_api_key=api_keys["anthropic"],
+            serper_api_key=api_keys["serper"]
+        )
+        
+        # Test inputs
+        inputs = {
+            "company": "Example Corp",
+            "industry": "Technology",
+            "pitching_role": "Software Engineer"
+        }
+        
+        # Run crew
+        result = crew.kickoff(inputs=inputs)
+        print(json.dumps(result, indent=2))
+        
+    except Exception as e:
+        print(f"Error in test run: {str(e)}")
