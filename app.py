@@ -124,8 +124,10 @@ def parse_contacts(text: str) -> List[Dict[str, str]]:
     
     return contacts
 
-def update_tabs_with_content(result):
+def update_tabs_with_content(result, tabs):
     """Update tabs with CrewAI results."""
+    tab1, tab2, tab3 = tabs  # Unpack the tabs
+    
     try:
         # Convert CrewOutput to dictionary format
         result_dict = result.model_dump() if hasattr(result, 'model_dump') else {}
@@ -145,7 +147,7 @@ def update_tabs_with_content(result):
                 email_output = tasks[2]['raw']
         
         # Display Research Tab
-        with st.tabs("📊 Research")[0]:  # Use existing tab
+        with tab1:
             st.subheader("Company & Industry Research")
             if research_output:
                 try:
@@ -162,7 +164,7 @@ def update_tabs_with_content(result):
                 st.warning("No research data available")
 
         # Display Contacts Tab
-        with st.tabs("👥 Contacts")[1]:  # Use existing tab
+        with tab2:
             st.subheader("Key Contacts")
             if contact_output:
                 try:
@@ -183,7 +185,7 @@ def update_tabs_with_content(result):
                 st.warning("No contact data available")
 
         # Display Email Tab
-        with st.tabs("✉️ Email")[2]:  # Use existing tab
+        with tab3:
             st.subheader("Email Draft")
             if email_output:
                 try:
@@ -342,17 +344,17 @@ def main():
                 st.warning(f"Could not remove temporary file: {str(e)}")
 
     # Show results or placeholders - AFTER the generate button
-    tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
+    tabs = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     if not st.session_state.generation_complete:
-        with tab1:
+        with tabs[0]:
             st.info("Company and industry research will appear here.")
-        with tab2:
+        with tabs[1]:
             st.info("Key contacts will be listed here.")
-        with tab3:
+        with tabs[2]:
             st.info("Your personalized email will appear here.")
     elif st.session_state.crew_result:
-        update_tabs_with_content(st.session_state.crew_result)
+        update_tabs_with_content(st.session_state.crew_result, tabs)
 
 if __name__ == "__main__":
     main()
