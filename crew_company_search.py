@@ -67,8 +67,8 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             culture, recent developments, and industry trends.""",
             tools=[tools["search"]],
             verbose=True,
-            allow_delegation=False
-            llm=llm
+            allow_delegation=False,
+            llm=llm,
         )
         
         # Create contact finder agent
@@ -80,8 +80,8 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             involved in the hiring process.""",
             tools=[tools["search"]],
             verbose=True,
-            allow_delegation=False
-            llm=llm
+            allow_delegation=False,
+            llm=llm,
         )
         
         # Create email writer agent
@@ -93,8 +93,8 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             experience and generate responses.""",
             tools=[tools["resume"]],
             verbose=True,
-            allow_delegation=False
-            llm=llm
+            allow_delegation=False,
+            llm=llm,
         )
         
         # Research task
