@@ -142,9 +142,9 @@ def update_tabs_with_content(result):
         if hasattr(result, 'tasks_output') and result.tasks_output:
             tasks = result.tasks_output
             if len(tasks) >= 3:
-                research_output = tasks[0].output
-                contact_output = tasks[1].output
-                email_output = tasks[2].output
+                research_output = tasks[0].result
+                contact_output = tasks[1].result
+                email_output = tasks[2].result
         elif hasattr(result, 'raw') and result.raw:
             # If we only have raw output, use it for all tabs
             research_output = contact_output = email_output = result.raw
