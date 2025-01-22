@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 import PyPDF2
 import io
-import json
 from crew_company_search import initialize_crew
+from typing import Dict, Any, List, Optional
 
 # Page configuration
 st.set_page_config(
@@ -38,103 +38,151 @@ st.markdown("""
         max-width: 1200px;
         margin: 0 auto;
     }
-    .stTabs [data-baseweb="tab-panel"] {
-        padding-top: 1rem;
+    .section-card {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    .contact-card {
+        border: 1px solid #dee2e6;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    .email-container {
+        background-color: white;
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data(ttl=3600)
 def pdf_to_text(uploaded_file) -> str:
-    """Convert uploaded PDF to text with caching."""
+    """Convert uploaded PDF to text with error handling."""
     try:
+        if not uploaded_file:
+            raise ValueError("No file uploaded")
+        
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.getvalue()))
         text = "\n".join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
+        
         if not text.strip():
             raise ValueError("No text content found in PDF")
         return text
     except Exception as e:
         raise Exception(f"Error processing PDF: {str(e)}")
 
-def parse_task_output(output_str: str) -> dict:
-    """Parse the task output string into a dictionary."""
-    try:
-        return json.loads(output_str)
-    except json.JSONDecodeError:
-        return {"error": "Could not parse output", "raw": output_str}
+def parse_research(text: str) -> Dict[str, List[str]]:
+    """Parse research output into sections."""
+    sections = {}
+    current_section = None
+    current_points = []
+    
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        
+        if line.endswith(':'):
+            if current_section and current_points:
+                sections[current_section] = current_points
+            current_section = line[:-1]
+            current_points = []
+        elif line.startswith('- ') or line.startswith('* '):
+            current_points.append(line[2:])
+        elif current_section:
+            current_points.append(line)
+    
+    if current_section and current_points:
+        sections[current_section] = current_points
+    
+    return sections
+
+def parse_contacts(text: str) -> List[Dict[str, str]]:
+    """Parse contact information into structured format."""
+    contacts = []
+    current_contact = {}
+    
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line:
+            if current_contact:
+                contacts.append(current_contact)
+                current_contact = {}
+            continue
+        
+        if ':' in line:
+            key, value = line.split(':', 1)
+            key = key.strip()
+            value = value.strip()
+            current_contact[key] = value
+    
+    if current_contact:
+        contacts.append(current_contact)
+    
+    return contacts
 
 def update_tabs_with_content(result):
     """Update tabs with CrewAI results."""
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
-    with tab1:
-        st.subheader("Company & Industry Insights")
-        
-        # Display company research
-        try:
-            company_data = parse_task_output(result.tasks[0].output)
-            if "key_insights" in company_data:
-                st.markdown("### Company Insights")
-                for insight in company_data["key_insights"]:
-                    st.markdown(f"• {insight}")
-            elif "raw" in company_data:
-                st.markdown("### Company Insights")
-                st.markdown(company_data["raw"])
-        except Exception as e:
-            st.info("Company research is being processed...")
-            
-        try:
-            industry_data = parse_task_output(result.tasks[1].output)
-            if "key_insights" in industry_data:
-                st.markdown("### Industry Insights")
-                for insight in industry_data["key_insights"]:
-                    st.markdown(f"• {insight}")
-            elif "raw" in industry_data:
-                st.markdown("### Industry Insights")
-                st.markdown(industry_data["raw"])
-        except Exception as e:
-            st.info("Industry research is being processed...")
+    try:
+        research_output = result.tasks[0].output
+        contact_output = result.tasks[1].output
+        email_output = result.tasks[2].output
 
-    with tab2:
-        st.subheader("Key Contacts")
-        try:
-            contacts_data = parse_task_output(result.tasks[2].output)
-            if "contacts" in contacts_data:
-                for contact in contacts_data["contacts"]:
-                    with st.expander(f"{contact['name']} - {contact['role']}"):
-                        st.markdown(f"**Role:** {contact['role']}")
-                        if "email" in contact and contact["email"]:
-                            st.markdown(f"**Email:** {contact['email']}")
-            elif "raw" in contacts_data:
-                st.markdown(contacts_data["raw"])
-        except Exception as e:
-            st.info("Contact information is being processed...")
+        with tab1:
+            st.subheader("Company & Industry Research")
+            try:
+                sections = parse_research(research_output)
+                for section, points in sections.items():
+                    st.markdown(f"### {section}")
+                    for point in points:
+                        st.markdown(f"• {point}")
+                    st.markdown("---")
+            except Exception as e:
+                st.error(f"Error displaying research: {str(e)}")
+                st.markdown(research_output)
 
-    with tab3:
-        st.subheader("Email Draft")
-        try:
-            email_data = parse_task_output(result.tasks[3].output)
-            if "email_draft" in email_data:
-                email_content = email_data["email_draft"]
-            elif "raw" in email_data:
-                email_content = email_data["raw"]
-            else:
-                email_content = str(result.tasks[3].output)
-            
-            st.text_area(
-                "Email Content",
-                value=email_content,
-                height=300,
-                key="email_content"
-            )
-            
-            col1, col2 = st.columns([1, 4])
-            with col1:
-                if st.button("📋 Copy"):
-                    st.code(email_content)
-                    st.success("Copied to clipboard!")
-        except Exception as e:
-            st.info("Email draft is being processed...")
+        with tab2:
+            st.subheader("Key Contacts")
+            try:
+                contacts = parse_contacts(contact_output)
+                for contact in contacts:
+                    with st.expander(f"{contact.get('Contact Name', 'Unknown')} - {contact.get('Role', 'Unknown Role')}"):
+                        for key, value in contact.items():
+                            if key != 'Contact Name':
+                                st.markdown(f"**{key}:** {value}")
+            except Exception as e:
+                st.error(f"Error displaying contacts: {str(e)}")
+                st.markdown(contact_output)
+
+        with tab3:
+            st.subheader("Email Draft")
+            try:
+                st.text_area(
+                    "Email Content",
+                    value=email_output,
+                    height=300,
+                    key="email_content"
+                )
+                
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    if st.button("📋 Copy"):
+                        st.code(email_output)
+                        st.success("Copied to clipboard!")
+            except Exception as e:
+                st.error(f"Error displaying email: {str(e)}")
+
+    except Exception as e:
+        st.error(f"Error updating content: {str(e)}")
+        if hasattr(result, 'tasks'):
+            for i, task in enumerate(result.tasks):
+                st.markdown(f"**Task {i+1} Output:**")
+                st.markdown(task.output)
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -154,7 +202,7 @@ def main():
         help="Upload your resume in PDF format"
     )
 
-    # Input form
+    # Target information
     st.subheader("🎯 Target Information")
     
     col1, col2 = st.columns(2)
@@ -219,7 +267,6 @@ def main():
                     st.session_state.crew_result = result
                     st.session_state.generation_complete = True
                     
-                    # Update UI with results
                     update_tabs_with_content(result)
                     st.success("✨ Application materials generated successfully!")
                 else:
