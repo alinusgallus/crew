@@ -69,7 +69,7 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
     
     contact_finder = Agent(
         role="Contact Finder",
-        goal="Find relevant hiring managers or team leaders at {company}.",
+        goal="Find relevant contacts at {company}.",
         backstory="""Expert at identifying key personnel within organizations.
         You focus on finding decision-makers relevant to the job seeker's interests.""",
         verbose=True,
@@ -90,66 +90,40 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
     # Define tasks with output schemas
     tasks = [
         Task(
-            description="""Research {company} focusing on:
-            - Recent developments and news
-            - Company culture and values
-            - Products or services
-            - Growth trajectory
-            Return insights as a CompanyResearch object.""",
+            description="""Research {company} and return as a JSON object with:
+            - company_name: the company name
+            - key_insights: a list of key findings about recent developments, culture, products, and growth""",
             agent=company_researcher,
-            output_schema=CompanyResearch,
-            expected_output="Structured company insights with key findings.",
-            context=[
-                "Focus on information relevant to job seekers",
-                "Look for recent company developments",
-                "Identify company culture and values"
-            ]
+            output_json=True,
+            output_schema=CompanyResearch
         ),
         
         Task(
-            description="""Analyze the {industry} industry focusing on:
-            - Current trends and challenges
-            - Growth opportunities
-            - Required skills and qualifications
-            Return insights as an IndustryResearch object.""",
+            description="""Analyze the {industry} industry and return as a JSON object with:
+            - industry_name: the industry name
+            - key_insights: a list of trends, challenges, and opportunities""",
             agent=industry_researcher,
-            output_schema=IndustryResearch,
-            expected_output="Structured industry analysis with key trends.",
-            context=[
-                "Focus on recent industry trends",
-                "Identify key skills and qualifications",
-                "Look for growth areas and opportunities"
-            ]
+            output_json=True,
+            output_schema=IndustryResearch
         ),
         
         Task(
-            description="""Identify 2-3 relevant contacts at {company} who might be involved in hiring for {pitching_role}.
-            Include their roles and any available contact information.
-            Return as a ContactResearch object.""",
+            description="""Find 2-3 contacts at {company} and return as a JSON object with:
+            - contacts: a list of contact objects, each with:
+              - name: the contact's name
+              - role: their role at the company
+              - email: their email if available""",
             agent=contact_finder,
-            output_schema=ContactResearch,
-            expected_output="List of relevant contacts with their roles.",
-            context=[
-                "Focus on finding hiring managers",
-                "Look for team leads in relevant departments",
-                "Identify decision makers for the target role"
-            ]
+            output_json=True,
+            output_schema=ContactResearch
         ),
         
         Task(
-            description="""Using the company research and contact information, craft a personalized outreach email:
-            - Mention specific company details that interest you
-            - Reference your relevant experience
-            - Keep it concise and professional
-            Return as an EmailDraft object.""",
+            description="""Create an email draft and return as a JSON object with:
+            - email_draft: the complete email text""",
             agent=message_crafter,
-            output_schema=EmailDraft,
-            expected_output="Personalized email draft for company outreach.",
-            context=[
-                "Use insights from company research",
-                "Highlight relevant experience",
-                "Keep the tone professional but personal"
-            ]
+            output_json=True,
+            output_schema=EmailDraft
         )
     ]
     
