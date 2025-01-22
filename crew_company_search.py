@@ -5,6 +5,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import os
 from typing import List, Optional, Dict, Any
 from crewai import Agent, Task, Crew, Process
+import LLM
 from crewai_tools import SerperDevTool, FileReadTool
 import json
 
@@ -48,7 +49,8 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             raise ValueError("Missing required API keys")
         
         # Set required environment variables
-        os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
+        llm = LLM(anthropic_api_key = anthropic_api_key, model="anthropic/claude-3-sonnet-20240229")
+
         
         # Create tools
         tools = create_tools(serper_api_key)
@@ -66,6 +68,7 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             tools=[tools["search"]],
             verbose=True,
             allow_delegation=False
+            llm=llm
         )
         
         # Create contact finder agent
@@ -78,6 +81,7 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             tools=[tools["search"]],
             verbose=True,
             allow_delegation=False
+            llm=llm
         )
         
         # Create email writer agent
@@ -90,6 +94,7 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
             tools=[tools["resume"]],
             verbose=True,
             allow_delegation=False
+            llm=llm
         )
         
         # Research task
