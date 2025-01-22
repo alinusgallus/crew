@@ -41,7 +41,7 @@ def initialize_crew(anthropic_api_key, serper_api_key):
 
     llm = LLM(
         api_key=anthropic_api_key,
-        model="anthropic/claude-3-sonnet"  
+        model='anthropic/claude-3-5-sonnet-20240620'
     )
     
     resume_tool = FileReadTool(file_path="resume.txt")
