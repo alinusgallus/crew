@@ -5,7 +5,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import os
 from typing import List, Optional, Dict, Any
 from crewai import Agent, Task, Crew, Process
-from crewai.tools import SerperDevTool, FileReadTool
+from crewai_tools import SerperDevTool, FileReadTool
 import json
 
 def load_resume() -> str:
