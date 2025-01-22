@@ -129,25 +129,24 @@ def update_tabs_with_content(result):
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     try:
-        # Debug output to understand the result structure
-        st.write("Debug - Result type:", type(result))
-        st.write("Debug - Result attributes:", dir(result) if result else "None")
+        # Convert CrewOutput to dictionary format
+        result_dict = result.model_dump() if hasattr(result, 'model_dump') else {}
         
         # Initialize outputs
         research_output = None
         contact_output = None
         email_output = None
         
-        # Handle CrewOutput object
-        if hasattr(result, 'tasks_output') and result.tasks_output:
-            tasks = result.tasks_output
+        # Try to get outputs from tasks_output
+        if 'tasks_output' in result_dict and result_dict['tasks_output']:
+            tasks = result_dict['tasks_output']
             if len(tasks) >= 3:
-                research_output = tasks[0].result
-                contact_output = tasks[1].result
-                email_output = tasks[2].result
-        elif hasattr(result, 'raw') and result.raw:
-            # If we only have raw output, use it for all tabs
-            research_output = contact_output = email_output = result.raw
+                research_output = tasks[0].get('result', '')
+                contact_output = tasks[1].get('result', '')
+                email_output = tasks[2].get('result', '')
+        # Fallback to raw output if available
+        elif 'raw' in result_dict and result_dict['raw']:
+            research_output = contact_output = email_output = result_dict['raw']
         
         # Display Research Tab
         with tab1:
@@ -209,9 +208,11 @@ def update_tabs_with_content(result):
     except Exception as e:
         st.error(f"Error updating content: {str(e)}")
         st.error("Raw result structure:")
-        if hasattr(result, 'raw'):
-            st.markdown(result.raw)
-        else:
+        try:
+            # Try to get raw output
+            raw_output = result.raw if hasattr(result, 'raw') else str(result)
+            st.markdown(raw_output)
+        except:
             st.write(result)
 
 def main():
