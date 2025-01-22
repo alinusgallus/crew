@@ -304,10 +304,6 @@ def main():
                 try:
                     result = crew_instance.kickoff(inputs=inputs)
                     
-                    # Debug output
-                    st.write("Debug - Result type:", type(result))
-                    st.write("Debug - Result structure:", result)
-                    
                     if result is None:
                         st.error("No results generated. The AI agents returned None.")
                         return
