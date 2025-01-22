@@ -63,10 +63,10 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
         # Create researcher agent
         researcher = Agent(
             role="Research Specialist",
-            goal="Gather comprehensive information about the target company and industry",
-            backstory="""Expert business researcher with years of experience analyzing 
-            companies and industries. You excel at finding key information about company 
-            culture, recent developments, and industry trends.""",
+            goal=f"""Analyze companies and industries to provide comprehensive insights 
+            for job applications and professional outreach.""",
+            backstory="""You are an expert in corporate research and industry analysis 
+            with years of experience helping job seekers understand potential employers.""",
             tools=[tools["search"]],
             verbose=True,
             allow_delegation=False,
@@ -76,10 +76,9 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
         # Create contact finder agent
         contact_finder = Agent(
             role="Contact Specialist",
-            goal="Identify appropriate hiring managers and decision makers",
-            backstory="""Expert at finding relevant contacts within organizations. 
-            You focus on identifying hiring managers and team leaders who would be 
-            involved in the hiring process.""",
+            goal="""Find relevant hiring managers and team leads at target companies.""",
+            backstory="""You are an expert in identifying key decision-makers and 
+            hiring managers within organizations.""",
             tools=[tools["search"]],
             verbose=True,
             allow_delegation=False,
@@ -101,67 +100,74 @@ def initialize_crew(anthropic_api_key: str, serper_api_key: str) -> Crew:
         
         # Research task
         research = Task(
-            description="""Analyze {company} and the {industry} industry.
-            Provide information in the following format:
+            description=f"""Analyze {company} and the {industry} industry.
+                Consider the specific context of {country} market.
+                Provide information in the following format:
 
-            Company Overview:
-            - Key facts about the company
-            - Recent developments
-            - Company culture and values
+                Company Overview:
+                - Key facts about the company
+                - Recent developments
+                - Company culture and values
+                - Local presence in {country}
 
-            Industry Analysis:
-            - Current trends
-            - Growth opportunities
-            - Key challenges
+                Industry Analysis:
+                - Current trends in {country}
+                - Growth opportunities
+                - Key challenges
+                - Local market dynamics
 
-            Required Skills:
-            - Technical skills
-            - Soft skills
-            - Industry-specific qualifications
-            
-            Provide ONLY these sections, with bullet points for each item.""",
+                Required Skills:
+                - Technical skills
+                - Soft skills
+                - Industry-specific qualifications
+                - Local requirements/certifications
+                
+                Provide ONLY these sections, with bullet points for each item.""",
             agent=researcher,
-            expected_output="A structured analysis with Company Overview, Industry Analysis, and Required Skills sections."
+            expected_output="A structured analysis with Company Overview, and Industry Analysis sections."
         )
         
         # Contact task
         contacts = Task(
-            description="""Find 2-3 relevant contacts at {company} for the {pitching_role} position.
-            Format each contact as:
+            description=f"""Find 2-3 relevant contacts at {company} for the {pitching_role} position.
+                Focus on contacts in {country} or with responsibility for {country}.
+                Format each contact as:
 
-            Contact Name: [Full Name]
-            Role: [Current Role]
-            Background: [Brief background]
-            Email: [Email if available]
+                Contact Name: [Full Name]
+                Role: [Current Role]
+                Location: [Country/Office]
+                Background: [Brief background]
+                Email: [Email if available]
 
-            Separate each contact with a blank line.
-            Focus on hiring managers and team leads.""",
+                Separate each contact with a blank line.
+                Focus on hiring managers and team leads.""",
             agent=contact_finder,
             expected_output="A list of 2-3 formatted contact profiles for relevant hiring managers or team leads."
         )
         
         # Email task
         email = Task(
-            description="""Write a personalized outreach email for {company}.
-            
-            Use this exact structure:
-            ---
-            Subject: [Clear subject line]
+            description=f"""Write a personalized outreach email for {company}.
+                Consider the local business culture in {country}.
+                
+                Use this exact structure:
+                ---
+                Subject: [Clear subject line]
 
-            Dear [Contact's Name],
+                Dear [Contact's Name],
 
-            [Opening with specific company detail]
+                [Opening with specific company detail]
 
-            [Paragraph about relevant experience]
+                [Paragraph about relevant experience]
 
-            [Closing with clear call to action]
+                [Closing with clear call to action]
 
-            Best regards,
-            [Your name]
-            ---
-            
-            Keep the total length under 200 words.
-            Use information from the research and resume.""",
+                Best regards,
+                [Your name]
+                ---
+                
+                Keep the total length under 200 words.
+                Use information from the research and resume.""",
             agent=writer,
             expected_output="A formatted email following the specified structure."
         )

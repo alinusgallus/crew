@@ -256,6 +256,17 @@ def main():
             help="Position you're applying for"
         )
         
+        # Add country selection
+        country = st.selectbox(
+            "Country",
+            options=[
+                "France", "United States", "United Kingdom", "Germany", 
+                "Singapore", "Australia", "Canada", "Japan", "Netherlands",
+                "Switzerland", "Other"
+            ],
+            help="Select the country where the position is located"
+        )
+        
         outreach_purpose = st.selectbox(
             "Outreach Purpose",
             options=["job opportunities", "networking", "internship"],
@@ -297,6 +308,7 @@ def main():
                 "outreach_purpose": outreach_purpose,
                 "pitching_role": pitching_role,
                 "company": company,
+                "country": country,  # Add country to inputs
                 "resume_path": resume_path  # Pass the full path to the resume file
             }
             
