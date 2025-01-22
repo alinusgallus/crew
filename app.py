@@ -209,7 +209,10 @@ def update_tabs_with_content(result):
         # Attempt to display raw result
         if result:
             st.markdown("### Raw Output:")
-            st.json(str(result))
+            if isinstance(result, (str, bytes)):
+                st.text(result)
+            else:
+                st.write(result)
 
 def main():
     st.title("AI Job Application Assistant 💼")
