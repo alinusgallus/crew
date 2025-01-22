@@ -243,21 +243,29 @@ def main():
         try:
             # Process resume
             resume_text = pdf_to_text(uploaded_file)
-            resume_path = Path("resume.txt")
-            resume_path.write_text(resume_text)
             
-            # Initialize CrewAI
+            # Save resume text to a temporary file in the current working directory
+            resume_path = os.path.join(os.getcwd(), "resume.txt")
+            with open(resume_path, "w", encoding="utf-8") as f:
+                f.write(resume_text)
+            
+            # Initialize CrewAI with error handling
             with st.spinner("Initializing AI agents..."):
-                crew_instance = initialize_crew(
-                    anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
-                    serper_api_key=st.secrets['SERPER_API_KEY']
-                )
+                try:
+                    crew_instance = initialize_crew(
+                        anthropic_api_key=st.secrets['ANTHROPIC_API_KEY'],
+                        serper_api_key=st.secrets['SERPER_API_KEY']
+                    )
+                except Exception as e:
+                    st.error(f"Failed to initialize AI agents: {str(e)}")
+                    return
             
             inputs = {
                 "industry": industry,
                 "outreach_purpose": outreach_purpose,
                 "pitching_role": pitching_role,
-                "company": company
+                "company": company,
+                "resume_path": resume_path  # Pass the full path to the resume file
             }
             
             with st.spinner("🔍 Analyzing and generating materials..."):
@@ -275,6 +283,13 @@ def main():
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
             st.error("Please try again or contact support.")
+        finally:
+            # Clean up the temporary resume file
+            try:
+                if os.path.exists(resume_path):
+                    os.remove(resume_path)
+            except Exception as e:
+                st.warning(f"Could not remove temporary file: {str(e)}")
 
     # Show results or placeholders
     if not st.session_state.generation_complete:
