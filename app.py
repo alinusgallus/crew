@@ -129,16 +129,8 @@ def update_tabs_with_content(result):
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     try:
-        # Debug the raw result first
-        st.write("Debug - Raw result:", result)
-        
-        # Convert CrewOutput to dictionary format and debug
+        # Convert CrewOutput to dictionary format
         result_dict = result.model_dump() if hasattr(result, 'model_dump') else {}
-        st.write("Debug - Result dict:", result_dict)
-        
-        # Debug tasks_output specifically
-        if 'tasks_output' in result_dict:
-            st.write("Debug - Tasks output:", result_dict['tasks_output'])
         
         # Initialize outputs
         research_output = None
@@ -148,39 +140,11 @@ def update_tabs_with_content(result):
         # Try to get outputs from tasks_output
         if 'tasks_output' in result_dict and result_dict['tasks_output']:
             tasks = result_dict['tasks_output']
-            st.write("Debug - Number of tasks:", len(tasks))
-            
             if len(tasks) >= 3:
-                # Debug each task
-                for i, task in enumerate(tasks):
-                    st.write(f"Debug - Task {i}:", task)
-                
-                # Try different ways to access the result
-                research_output = (
-                    tasks[0].get('result', '') or 
-                    getattr(tasks[0], 'result', '') or 
-                    getattr(tasks[0], 'output', '')
-                )
-                contact_output = (
-                    tasks[1].get('result', '') or 
-                    getattr(tasks[1], 'result', '') or 
-                    getattr(tasks[1], 'output', '')
-                )
-                email_output = (
-                    tasks[2].get('result', '') or 
-                    getattr(tasks[2], 'result', '') or 
-                    getattr(tasks[2], 'output', '')
-                )
-                
-                # Debug the extracted outputs
-                st.write("Debug - Research output:", research_output)
-                st.write("Debug - Contact output:", contact_output)
-                st.write("Debug - Email output:", email_output)
-                
-        # Fallback to raw output if available
-        elif 'raw' in result_dict and result_dict['raw']:
-            st.write("Debug - Using raw output")
-            research_output = contact_output = email_output = result_dict['raw']
+                # Access the raw field from each task
+                research_output = tasks[0]['raw']
+                contact_output = tasks[1]['raw']
+                email_output = tasks[2]['raw']
         
         # Display Research Tab
         with tab1:
@@ -204,6 +168,10 @@ def update_tabs_with_content(result):
             st.subheader("Key Contacts")
             if contact_output:
                 try:
+                    # Remove the "Based on my research" prefix if present
+                    if contact_output.startswith("Based on my research"):
+                        contact_output = contact_output.split("\n\n", 1)[1]
+                    
                     contacts = parse_contacts(contact_output)
                     for contact in contacts:
                         with st.expander(f"{contact.get('Contact Name', 'Unknown')} - {contact.get('Role', 'Unknown Role')}"):
@@ -243,7 +211,6 @@ def update_tabs_with_content(result):
         st.error(f"Error updating content: {str(e)}")
         st.error("Raw result structure:")
         try:
-            # Try to get raw output
             raw_output = result.raw if hasattr(result, 'raw') else str(result)
             st.markdown(raw_output)
         except:
