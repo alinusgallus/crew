@@ -38,7 +38,7 @@ st.markdown("""
 
 @st.cache_data
 def pdf_to_text(uploaded_file):
-    """Convert uploaded PDF to text with caching"""
+    """Convert uploaded PDF to text with caching."""
     try:
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.getvalue()))
         text = "\n".join(page.extract_text() for page in pdf_reader.pages)
@@ -47,8 +47,14 @@ def pdf_to_text(uploaded_file):
         st.error(f"Error processing PDF: {e}")
         return None
 
+def save_json_results(result, filename="crewai_output.json"):
+    """Save the CrewAI result as a JSON file."""
+    with open(filename, "w") as f:
+        json.dump(result, f, indent=4)
+    return filename
+
 def render_tabs_with_placeholders():
-    """Render initial tabs with placeholders"""
+    """Render initial tabs with placeholders."""
     tab1, tab2, tab3 = st.tabs(["📊 Company Research", "👥 Contacts", "✉️ Email Draft"])
     
     with tab1:
@@ -64,8 +70,7 @@ def render_tabs_with_placeholders():
         st.info("Your personalized email draft will appear here after generation.")
 
 def update_tabs_with_content(result_dict):
-    """Update tabs with actual content"""
-    # Debug logging
+    """Update tabs with actual content."""
     with st.expander("Debug Information", expanded=False):
         st.write("=== CrewAI Output Debug ===")
         st.write(f"Output type: {type(result_dict)}")
@@ -212,36 +217,16 @@ def main():
                 with st.spinner("🔍 Researching and crafting your application..."):
                     raw_result = crew_instance.kickoff(inputs=inputs)
                     
-                    # Debug logging
-                    with st.expander("Raw CrewAI Response", expanded=False):
-                        st.write("Raw result type:", type(raw_result))
-                        st.write("Raw result preview:", str(raw_result)[:500] if raw_result else "No result")
-                    
                     if raw_result is not None:
-                        try:
-                            # Handle different result formats
-                            if isinstance(raw_result, str):
-                                try:
-                                    result_dict = json.loads(raw_result)
-                                except json.JSONDecodeError:
-                                    result_dict = {
-                                        "company_research": raw_result,
-                                        "industry_insights": "",
-                                        "contacts": [],
-                                        "email_draft": ""
-                                    }
-                            else:
-                                result_dict = raw_result
-                            
-                            st.session_state.generation_complete = True
-                            update_tabs_with_content(result_dict)
-                            st.success("✨ Application materials generated successfully!")
-                            
-                        except Exception as e:
-                            st.error(f"Error processing results: {str(e)}")
-                            with st.expander("Debug Information"):
-                                st.write("Raw result for debugging:", raw_result)
-                            
+                        json_file = save_json_results(raw_result)
+                        
+                        with open(json_file, "r") as f:
+                            result_dict = json.load(f)
+                        
+                        st.session_state.generation_complete = True
+                        update_tabs_with_content(result_dict)
+                        st.success("✨ Application materials generated successfully!")
+                    
                     else:
                         st.error("No results were generated. Please try again.")
                         
