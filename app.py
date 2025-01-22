@@ -129,27 +129,43 @@ def update_tabs_with_content(result):
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     try:
-        # Check if result has pydantic attribute
-        if hasattr(result, 'pydantic'):
-            research_output = result.pydantic.tasks[0].output
-            contact_output = result.pydantic.tasks[1].output
-            email_output = result.pydantic.tasks[2].output
-        # If result is a direct list of tasks
-        elif hasattr(result, 'tasks'):
-            research_output = result.tasks[0].output
-            contact_output = result.tasks[1].output
-            email_output = result.tasks[2].output
-        # If result is a dictionary
-        elif isinstance(result, dict) and 'tasks' in result:
-            research_output = result['tasks'][0]['output']
-            contact_output = result['tasks'][1]['output']
-            email_output = result['tasks'][2]['output']
-        # If result has direct attributes
-        else:
-            research_output = getattr(result, 'research_output', '')
-            contact_output = getattr(result, 'contact_output', '')
-            email_output = getattr(result, 'email_output', '')
-
+        # Debug output to understand the result structure
+        st.write("Debug - Result type:", type(result))
+        st.write("Debug - Result attributes:", dir(result) if result else "None")
+        
+        # Initialize outputs
+        research_output = None
+        contact_output = None
+        email_output = None
+        
+        # Try different ways to extract the data
+        if result:
+            if hasattr(result, 'pydantic') and hasattr(result.pydantic, 'tasks'):
+                research_output = result.pydantic.tasks[0].output
+                contact_output = result.pydantic.tasks[1].output
+                email_output = result.pydantic.tasks[2].output
+            elif hasattr(result, 'tasks'):
+                if isinstance(result.tasks, list) and len(result.tasks) >= 3:
+                    research_output = result.tasks[0].output
+                    contact_output = result.tasks[1].output
+                    email_output = result.tasks[2].output
+            elif isinstance(result, dict):
+                if 'tasks' in result:
+                    tasks = result['tasks']
+                    if len(tasks) >= 3:
+                        research_output = tasks[0].get('output', '')
+                        contact_output = tasks[1].get('output', '')
+                        email_output = tasks[2].get('output', '')
+                else:
+                    # Try to get outputs directly from dict
+                    research_output = result.get('research_output', '')
+                    contact_output = result.get('contact_output', '')
+                    email_output = result.get('email_output', '')
+            elif isinstance(result, str):
+                # If result is a single string, show it in all tabs
+                research_output = contact_output = email_output = result
+        
+        # Display Research Tab
         with tab1:
             st.subheader("Company & Industry Research")
             if research_output:
@@ -165,7 +181,10 @@ def update_tabs_with_content(result):
                     st.markdown(research_output)
             else:
                 st.warning("No research data available")
+                st.markdown("Raw output:")
+                st.write(result)
 
+        # Display Contacts Tab
         with tab2:
             st.subheader("Key Contacts")
             if contact_output:
@@ -181,7 +200,10 @@ def update_tabs_with_content(result):
                     st.markdown(contact_output)
             else:
                 st.warning("No contact data available")
+                st.markdown("Raw output:")
+                st.write(result)
 
+        # Display Email Tab
         with tab3:
             st.subheader("Email Draft")
             if email_output:
@@ -203,16 +225,13 @@ def update_tabs_with_content(result):
                     st.markdown(email_output)
             else:
                 st.warning("No email draft available")
+                st.markdown("Raw output:")
+                st.write(result)
 
     except Exception as e:
         st.error(f"Error updating content: {str(e)}")
-        # Attempt to display raw result
-        if result:
-            st.markdown("### Raw Output:")
-            if isinstance(result, (str, bytes)):
-                st.text(result)
-            else:
-                st.write(result)
+        st.error("Raw result structure:")
+        st.write(result)
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -299,18 +318,25 @@ def main():
             }
             
             with st.spinner("🔍 Analyzing and generating materials..."):
-                result = crew_instance.kickoff(inputs=inputs)
-                
-                # Add this debug output
-                st.write("Debug - Result structure:", result)
-                if result:
+                try:
+                    result = crew_instance.kickoff(inputs=inputs)
+                    
+                    # Debug output
+                    st.write("Debug - Result type:", type(result))
+                    st.write("Debug - Result structure:", result)
+                    
+                    if result is None:
+                        st.error("No results generated. The AI agents returned None.")
+                        return
+                        
                     st.session_state.crew_result = result
                     st.session_state.generation_complete = True
                     
                     update_tabs_with_content(result)
                     st.success("✨ Application materials generated successfully!")
-                else:
-                    st.error("No results generated. Please try again.")
+                except Exception as e:
+                    st.error(f"Error during generation: {str(e)}")
+                    st.error("Please try again or contact support.")
                     
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
