@@ -129,60 +129,87 @@ def update_tabs_with_content(result):
     tab1, tab2, tab3 = st.tabs(["📊 Research", "👥 Contacts", "✉️ Email"])
     
     try:
-        research_output = result.pydantic.tasks[0].output
-        contact_output = result.pydantic.tasks[1].output
-        email_output = result.pydantic.tasks[2].output
+        # Check if result has pydantic attribute
+        if hasattr(result, 'pydantic'):
+            research_output = result.pydantic.tasks[0].output
+            contact_output = result.pydantic.tasks[1].output
+            email_output = result.pydantic.tasks[2].output
+        # If result is a direct list of tasks
+        elif hasattr(result, 'tasks'):
+            research_output = result.tasks[0].output
+            contact_output = result.tasks[1].output
+            email_output = result.tasks[2].output
+        # If result is a dictionary
+        elif isinstance(result, dict) and 'tasks' in result:
+            research_output = result['tasks'][0]['output']
+            contact_output = result['tasks'][1]['output']
+            email_output = result['tasks'][2]['output']
+        # If result has direct attributes
+        else:
+            research_output = getattr(result, 'research_output', '')
+            contact_output = getattr(result, 'contact_output', '')
+            email_output = getattr(result, 'email_output', '')
 
         with tab1:
             st.subheader("Company & Industry Research")
-            try:
-                sections = parse_research(research_output)
-                for section, points in sections.items():
-                    st.markdown(f"### {section}")
-                    for point in points:
-                        st.markdown(f"• {point}")
-                    st.markdown("---")
-            except Exception as e:
-                st.error(f"Error displaying research: {str(e)}")
-                st.markdown(research_output)
+            if research_output:
+                try:
+                    sections = parse_research(research_output)
+                    for section, points in sections.items():
+                        st.markdown(f"### {section}")
+                        for point in points:
+                            st.markdown(f"• {point}")
+                        st.markdown("---")
+                except Exception as e:
+                    st.error(f"Error parsing research: {str(e)}")
+                    st.markdown(research_output)
+            else:
+                st.warning("No research data available")
 
         with tab2:
             st.subheader("Key Contacts")
-            try:
-                contacts = parse_contacts(contact_output)
-                for contact in contacts:
-                    with st.expander(f"{contact.get('Contact Name', 'Unknown')} - {contact.get('Role', 'Unknown Role')}"):
-                        for key, value in contact.items():
-                            if key != 'Contact Name':
-                                st.markdown(f"**{key}:** {value}")
-            except Exception as e:
-                st.error(f"Error displaying contacts: {str(e)}")
-                st.markdown(contact_output)
+            if contact_output:
+                try:
+                    contacts = parse_contacts(contact_output)
+                    for contact in contacts:
+                        with st.expander(f"{contact.get('Contact Name', 'Unknown')} - {contact.get('Role', 'Unknown Role')}"):
+                            for key, value in contact.items():
+                                if key != 'Contact Name':
+                                    st.markdown(f"**{key}:** {value}")
+                except Exception as e:
+                    st.error(f"Error parsing contacts: {str(e)}")
+                    st.markdown(contact_output)
+            else:
+                st.warning("No contact data available")
 
         with tab3:
             st.subheader("Email Draft")
-            try:
-                st.text_area(
-                    "Email Content",
-                    value=email_output,
-                    height=300,
-                    key="email_content"
-                )
-                
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if st.button("📋 Copy"):
-                        st.code(email_output)
-                        st.success("Copied to clipboard!")
-            except Exception as e:
-                st.error(f"Error displaying email: {str(e)}")
+            if email_output:
+                try:
+                    st.text_area(
+                        "Email Content",
+                        value=email_output,
+                        height=300,
+                        key="email_content"
+                    )
+                    
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        if st.button("📋 Copy"):
+                            st.code(email_output)
+                            st.success("Copied to clipboard!")
+                except Exception as e:
+                    st.error(f"Error displaying email: {str(e)}")
+                    st.markdown(email_output)
+            else:
+                st.warning("No email draft available")
 
     except Exception as e:
         st.error(f"Error updating content: {str(e)}")
-        if hasattr(result, 'tasks'):
-            for i, task in enumerate(result.tasks):
-                st.markdown(f"**Task {i+1} Output:**")
-                st.markdown(task.output)
+        # Attempt to display raw result
+        if result:
+            st.markdown("### Raw Output:")
+            st.json(str(result))
 
 def main():
     st.title("AI Job Application Assistant 💼")
@@ -271,6 +298,8 @@ def main():
             with st.spinner("🔍 Analyzing and generating materials..."):
                 result = crew_instance.kickoff(inputs=inputs)
                 
+                # Add this debug output
+                st.write("Debug - Result structure:", result)
                 if result:
                     st.session_state.crew_result = result
                     st.session_state.generation_complete = True
