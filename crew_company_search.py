@@ -103,7 +103,12 @@ def initialize_crew(
             tools=[tools["resume"]],
             verbose=True,
             allow_delegation=False,
-            llm=llm,
+            llm=LLM(api_key = anthropic_api_key, model="anthropic/claude-3-5-haiku-20241022"),
+            llm_config={
+                "temperature": 0.5,
+                "retry_delay": 10,
+                "max_retries": 3,
+            },
         )
         
         # Research task
