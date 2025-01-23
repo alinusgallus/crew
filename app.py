@@ -237,6 +237,14 @@ def main():
     - Crafting personalized outreach messages
     """)
 
+    # Add note about privacy and performance
+    st.info("""
+    ℹ️ **Important Notes:**
+    - This is a prototype application and may run slower than a production version
+    - No user data or resumes are stored - all information is processed in memory and immediately deleted
+    - Each generation takes about 2-3 minutes to complete
+    """)
+
     # File upload
     uploaded_file = st.file_uploader(
         "📄 Upload Resume (PDF)",
