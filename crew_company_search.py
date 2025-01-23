@@ -79,6 +79,11 @@ def initialize_crew(
             verbose=True,
             allow_delegation=False,
             llm=llm,
+            llm_config={
+                "temperature": 0.2,
+                "retry_delay": 10,
+                "max_retries": 3,
+            },
         )
         
         # Create contact finder agent
@@ -90,7 +95,12 @@ def initialize_crew(
             tools=[tools["search"]],
             verbose=True,
             allow_delegation=False,
-            llm=llm,
+            llm=LLM(api_key = anthropic_api_key, model="anthropic/claude-3-haiku-20240307"),
+            llm_config={
+                "temperature": 0.2,
+                "retry_delay": 10,
+                "max_retries": 3,
+            },
         )
         
         # Create email writer agent
@@ -103,9 +113,9 @@ def initialize_crew(
             tools=[tools["resume"]],
             verbose=True,
             allow_delegation=False,
-            llm=LLM(api_key = anthropic_api_key, model="anthropic/claude-3-5-haiku-20241022"),
+            llm=llm,
             llm_config={
-                "temperature": 0.5,
+                "temperature": 0.6,
                 "retry_delay": 10,
                 "max_retries": 3,
             },
@@ -180,14 +190,15 @@ def initialize_crew(
                 Keep the total length under 200 words.
                 Use information from the research and resume.""",
             agent=writer,
-            expected_output="A formatted email following the specified structure."
+            expected_output="A formatted email following the specified structure.",
+            context=[research, contacts],
         )
         
         # Create crew
         crew = Crew(
             agents=[researcher, contact_finder, writer],
             tasks=[research, contacts, email],
-            process=Process.sequential,
+            process=Process.hierarchical,
             verbose=True
         )
         
