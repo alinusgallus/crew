@@ -143,7 +143,7 @@ def initialize_crew(
                 
                 Provide ONLY these sections, with bullet points for each item.""",
             agent=researcher,
-            expected_output="A structured analysis with Company Overview, and Industry Analysis sections."
+            expected_output="A structured analysis with Company Overview and Industry Analysis sections."
         )
         
         # Contact task
@@ -191,7 +191,7 @@ def initialize_crew(
                 Use information from the research and resume.""",
             agent=writer,
             expected_output="A formatted email following the specified structure.",
-            context=[research, contacts],
+            context=[research, contacts]
         )
         
         # Create crew
@@ -199,6 +199,7 @@ def initialize_crew(
             agents=[researcher, contact_finder, writer],
             tasks=[research, contacts, email],
             process=Process.hierarchical,
+            manager_llm=llm,
             verbose=True
         )
         
@@ -232,6 +233,9 @@ if __name__ == "__main__":
         
         # Run crew
         result = crew.kickoff(inputs=inputs)
+        
+        # Just print the results directly
+        print("\nResults:")
         print(json.dumps(result, indent=2))
         
     except Exception as e:
