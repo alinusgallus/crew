@@ -185,9 +185,11 @@ def initialize_crew(
                    - Business culture norms
                    - Required permits and licenses
 
+                Return the analysis as a structured JSON object matching the ResearchOutput model format.
                 Ensure all information is accurate, current, and relevant to {pitching_role} position.""",
             agent=researcher,
-            expected_output=ResearchOutput
+            expected_output="A comprehensive company and industry analysis",
+            output_json=ResearchOutput,
         )
         
         # Contact task
