@@ -9,6 +9,8 @@ import PyPDF2
 import io
 from crew_company_search import initialize_crew
 from typing import Dict, Any, List, Optional
+from models import ResearchOutput
+import json
 
 # Page configuration
 st.set_page_config(
@@ -141,8 +143,7 @@ def update_tabs_with_content(result, tabs):
         if 'tasks_output' in result_dict and result_dict['tasks_output']:
             tasks = result_dict['tasks_output']
             if len(tasks) >= 3:
-                # Access the raw field from each task
-                research_output = tasks[0]['raw']
+                research_output = tasks[0]['raw']  # This will now be a ResearchOutput model
                 contact_output = tasks[1]['raw']
                 email_output = tasks[2]['raw']
         
@@ -151,12 +152,128 @@ def update_tabs_with_content(result, tabs):
             st.subheader("Company & Industry Research")
             if research_output:
                 try:
-                    sections = parse_research(research_output)
-                    for section, points in sections.items():
-                        st.markdown(f"### {section}")
-                        for point in points:
-                            st.markdown(f"• {point}")
-                        st.markdown("---")
+                    # Parse the research output into ResearchOutput model if it's a string
+                    if isinstance(research_output, str):
+                        research_data = ResearchOutput(**json.loads(research_output))
+                    else:
+                        research_data = research_output
+
+                    # Company Analysis Section
+                    st.markdown("### 🏢 Company Analysis")
+                    
+                    # Company Details
+                    with st.expander("Company Details", expanded=True):
+                        details = research_data.company_analysis.company_details
+                        st.markdown(f"- **Employees:** {details.employees}")
+                        st.markdown(f"- **Offices:** {details.offices_count}")
+                        st.markdown(f"- **Company Stage:** {details.company_stage}")
+                        st.markdown(f"- **Financial Status:** {details.financial_status}")
+                        st.markdown("**Core Business:**")
+                        for business in details.core_business:
+                            st.markdown(f"  • {business}")
+                        st.markdown("**Geographical Presence:**")
+                        for location in details.geographical_presence:
+                            st.markdown(f"  • {location}")
+                        st.markdown(f"- **Organization:** {details.organizational_structure}")
+
+                    # Position Context
+                    with st.expander("Position Context", expanded=True):
+                        position = research_data.company_analysis.position_context
+                        st.markdown(f"- **Department:** {position.department_overview}")
+                        st.markdown(f"- **Reporting:** {position.reporting_structure}")
+                        st.markdown("**Growth Plans:**")
+                        for plan in position.growth_plans:
+                            st.markdown(f"  • {plan}")
+                        st.markdown("**Key Projects:**")
+                        for project in position.key_projects:
+                            st.markdown(f"  • {project}")
+                        st.markdown("**Required Qualifications:**")
+                        for qual in position.required_qualifications:
+                            st.markdown(f"  • {qual}")
+                        st.markdown("**Similar Roles:**")
+                        for role in position.similar_roles:
+                            st.markdown(f"  • {role}")
+
+                    # Work Environment
+                    with st.expander("Work Environment", expanded=True):
+                        env = research_data.company_analysis.work_environment
+                        st.markdown("**Company Values:**")
+                        for value in env.company_values:
+                            st.markdown(f"  • {value}")
+                        st.markdown(f"- **Culture:** {env.culture_description}")
+                        st.markdown("**Development Programs:**")
+                        for program in env.development_programs:
+                            st.markdown(f"  • {program}")
+                        st.markdown("**Benefits:**")
+                        for benefit in env.benefits_overview:
+                            st.markdown(f"  • {benefit}")
+                        st.markdown(f"- **Leadership Style:** {env.leadership_style}")
+                        st.markdown("**Employee Reviews:**")
+                        for review in env.employee_reviews:
+                            st.markdown(f"  • {review}")
+                        st.markdown(f"- **Work Model:** {env.work_model}")
+
+                    # Industry Analysis Section
+                    st.markdown("### 🌐 Industry Analysis")
+                    
+                    # Market Position
+                    with st.expander("Market Position", expanded=True):
+                        market = research_data.industry_analysis.market_position
+                        st.markdown(f"- **Industry Ranking:** {market.industry_ranking}")
+                        st.markdown("**Key Competitors:**")
+                        for competitor in market.key_competitors:
+                            st.markdown(f"  • {competitor}")
+                        st.markdown("**Differentiators:**")
+                        for diff in market.differentiators:
+                            st.markdown(f"  • {diff}")
+                        st.markdown("**Major Partnerships:**")
+                        for partnership in market.major_partnerships:
+                            st.markdown(f"  • {partnership}")
+                        st.markdown("**Recent Achievements:**")
+                        for achievement in market.recent_achievements:
+                            st.markdown(f"  • {achievement}")
+                        st.markdown("**Industry Challenges:**")
+                        for challenge in market.industry_challenges:
+                            st.markdown(f"  • {challenge}")
+
+                    # Professional Growth
+                    with st.expander("Professional Growth", expanded=True):
+                        growth = research_data.industry_analysis.professional_growth
+                        st.markdown("**Required Skills:**")
+                        for skill in growth.skill_requirements:
+                            st.markdown(f"  • {skill}")
+                        st.markdown("**Career Paths:**")
+                        for path in growth.career_paths:
+                            st.markdown(f"  • {path}")
+                        st.markdown("**Certifications:**")
+                        for cert in growth.certifications:
+                            st.markdown(f"  • {cert}")
+                        st.markdown(f"- **Salary Ranges:** {growth.salary_ranges}")
+                        st.markdown("**Professional Associations:**")
+                        for assoc in growth.professional_associations:
+                            st.markdown(f"  • {assoc}")
+                        st.markdown("**Industry Outlook:**")
+                        for outlook in growth.industry_outlook:
+                            st.markdown(f"  • {outlook}")
+
+                    # Local Market
+                    with st.expander("Local Market", expanded=True):
+                        local = research_data.industry_analysis.local_market
+                        st.markdown(f"- **Regional Status:** {local.regional_status}")
+                        st.markdown(f"- **Business Environment:** {local.business_environment}")
+                        st.markdown("**Local Competitors:**")
+                        for competitor in local.local_competitors:
+                            st.markdown(f"  • {competitor}")
+                        st.markdown("**Employment Regulations:**")
+                        for reg in local.employment_regulations:
+                            st.markdown(f"  • {reg}")
+                        st.markdown("**Business Culture:**")
+                        for culture in local.business_culture:
+                            st.markdown(f"  • {culture}")
+                        st.markdown("**Required Permits:**")
+                        for permit in local.required_permits:
+                            st.markdown(f"  • {permit}")
+
                 except Exception as e:
                     st.error(f"Error parsing research: {str(e)}")
                     st.markdown(research_output)

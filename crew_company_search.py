@@ -10,6 +10,12 @@ from typing import List, Optional, Dict, Any
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai_tools import SerperDevTool, FileReadTool
 import json
+from models import (
+    ResearchOutput, CompanyAnalysis, IndustryAnalysis,
+    CompanyDetails, PositionContext, WorkEnvironment,
+    MarketPosition, ProfessionalGrowth, LocalMarket,
+    CompanyStage, WorkModel
+)
 
 def load_resume() -> str:
     """Safely load resume content with error handling."""
@@ -125,25 +131,120 @@ def initialize_crew(
         research = Task(
             description=f"""Analyze {company} and the {industry} industry.
                 Consider the specific context of {country} market.
-                Provide information in the following format:
+                
+                Provide a comprehensive analysis following this exact structure:
 
-                Company Overview:
-                - Key facts about the company
-                - Recent developments
-                - Company culture and values
-                - Local presence in {country}
+                Company Analysis:
+                1. Company Details:
+                   - Employee count range
+                   - Number of office locations
+                   - Company stage (startup/established/multinational)
+                   - Financial status
+                   - Core business areas
+                   - Geographical presence
+                   - Organizational structure
+
+                2. Position Context:
+                   - Department overview
+                   - Reporting structure
+                   - Growth plans
+                   - Key projects
+                   - Required qualifications
+                   - Similar roles
+
+                3. Work Environment:
+                   - Company values
+                   - Culture description
+                   - Development programs
+                   - Benefits overview
+                   - Leadership style
+                   - Employee reviews
+                   - Work model (remote/hybrid/office)
 
                 Industry Analysis:
-                - Current trends in {country}
-                - Growth opportunities
-                - Key challenges
-                - Local market dynamics
-                - Industry-specific qualifications
-                - Local requirements/certifications
-                
-                Provide ONLY these sections, with bullet points for each item.""",
+                1. Market Position:
+                   - Industry ranking
+                   - Key competitors
+                   - Differentiators
+                   - Major partnerships
+                   - Recent achievements
+                   - Industry challenges
+
+                2. Professional Growth:
+                   - Skill requirements
+                   - Career paths
+                   - Relevant certifications
+                   - Salary ranges
+                   - Professional associations
+                   - Industry outlook
+
+                3. Local Market ({country}):
+                   - Regional status
+                   - Business environment
+                   - Local competitors
+                   - Employment regulations
+                   - Business culture
+                   - Required permits
+
+                Format the response as structured data that can be parsed into the ResearchOutput model.
+                Ensure all fields are meaningful and complete.""",
             agent=researcher,
-            expected_output="A structured analysis with Company Overview and Industry Analysis sections."
+            expected_output=ResearchOutput(
+                company_analysis=CompanyAnalysis(
+                    company_details=CompanyDetails(
+                        employees="",
+                        offices_count="",
+                        company_stage=CompanyStage.ESTABLISHED,
+                        financial_status="",
+                        core_business=[],
+                        geographical_presence=[],
+                        organizational_structure=""
+                    ),
+                    position_context=PositionContext(
+                        department_overview="",
+                        reporting_structure="",
+                        growth_plans=[],
+                        key_projects=[],
+                        required_qualifications=[],
+                        similar_roles=[]
+                    ),
+                    work_environment=WorkEnvironment(
+                        company_values=[],
+                        culture_description="",
+                        development_programs=[],
+                        benefits_overview=[],
+                        leadership_style="",
+                        employee_reviews=[],
+                        work_model=WorkModel.HYBRID
+                    )
+                ),
+                industry_analysis=IndustryAnalysis(
+                    market_position=MarketPosition(
+                        industry_ranking="",
+                        key_competitors=[],
+                        differentiators=[],
+                        major_partnerships=[],
+                        recent_achievements=[],
+                        industry_challenges=[]
+                    ),
+                    professional_growth=ProfessionalGrowth(
+                        skill_requirements=[],
+                        career_paths=[],
+                        certifications=[],
+                        salary_ranges="",
+                        professional_associations=[],
+                        industry_outlook=[]
+                    ),
+                    local_market=LocalMarket(
+                        regional_status="",
+                        business_environment="",
+                        local_competitors=[],
+                        employment_regulations=[],
+                        business_culture=[],
+                        required_permits=[]
+                    )
+                )
+            ).dict()
         )
         
         # Contact task
@@ -208,6 +309,21 @@ def initialize_crew(
     except Exception as e:
         raise Exception(f"Error initializing crew: {str(e)}")
 
+def parse_research_output(result: str) -> Dict[str, Any]:
+    """Parse and validate the research output using the ResearchOutput model."""
+    try:
+        # Convert the string result to a dictionary
+        if isinstance(result, str):
+            result_dict = json.loads(result)
+        else:
+            result_dict = result
+            
+        # Validate using the ResearchOutput model
+        research_output = ResearchOutput(**result_dict)
+        return research_output.dict()
+    except Exception as e:
+        raise Exception(f"Error parsing research output: {str(e)}")
+
 if __name__ == "__main__":
     try:
         # Test configuration
@@ -234,9 +350,12 @@ if __name__ == "__main__":
         # Run crew
         result = crew.kickoff(inputs=inputs)
         
-        # Just print the results directly
-        print("\nResults:")
-        print(json.dumps(result, indent=2))
+        # Parse and validate the results
+        parsed_results = parse_research_output(result)
+        
+        # Print the validated results
+        print("\nValidated Results:")
+        print(json.dumps(parsed_results, indent=2))
         
     except Exception as e:
         print(f"Error in test run: {str(e)}")
