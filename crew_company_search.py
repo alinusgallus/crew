@@ -133,13 +133,12 @@ def initialize_crew(
                 Consider the specific context of {country} market.
                 
                 Provide a comprehensive analysis following this exact structure:
-
+                
                 Company Analysis:
                 1. Company Details:
-                   - Employee count range
-                   - Number of office locations
+                   - Employee count and office locations
                    - Company stage (startup/established/multinational)
-                   - Financial status
+                   - Financial status and performance
                    - Core business areas
                    - Geographical presence
                    - Organizational structure
@@ -147,104 +146,48 @@ def initialize_crew(
                 2. Position Context:
                    - Department overview
                    - Reporting structure
-                   - Growth plans
-                   - Key projects
+                   - Growth plans and opportunities
+                   - Key projects and initiatives
                    - Required qualifications
-                   - Similar roles
+                   - Similar roles in the organization
 
                 3. Work Environment:
-                   - Company values
-                   - Culture description
-                   - Development programs
-                   - Benefits overview
-                   - Leadership style
-                   - Employee reviews
+                   - Company values and mission
+                   - Culture and workplace environment
+                   - Development and training programs
+                   - Benefits and perks
+                   - Leadership approach
+                   - Employee feedback and reviews
                    - Work model (remote/hybrid/office)
 
                 Industry Analysis:
                 1. Market Position:
-                   - Industry ranking
-                   - Key competitors
-                   - Differentiators
-                   - Major partnerships
+                   - Industry ranking and market share
+                   - Key competitors analysis
+                   - Company differentiators
+                   - Strategic partnerships
                    - Recent achievements
-                   - Industry challenges
+                   - Industry challenges and risks
 
                 2. Professional Growth:
-                   - Skill requirements
-                   - Career paths
-                   - Relevant certifications
-                   - Salary ranges
-                   - Professional associations
-                   - Industry outlook
+                   - Essential skills and competencies
+                   - Career advancement paths
+                   - Industry certifications
+                   - Compensation ranges
+                   - Professional networks
+                   - Industry growth outlook
 
                 3. Local Market ({country}):
-                   - Regional status
-                   - Business environment
-                   - Local competitors
+                   - Regional market status
+                   - Business environment analysis
+                   - Local competition landscape
                    - Employment regulations
-                   - Business culture
-                   - Required permits
+                   - Business culture norms
+                   - Required permits and licenses
 
-                Format the response as structured data that can be parsed into the ResearchOutput model.
-                Ensure all fields are meaningful and complete.""",
+                Ensure all information is accurate, current, and relevant to {pitching_role} position.""",
             agent=researcher,
-            expected_output=ResearchOutput(
-                company_analysis=CompanyAnalysis(
-                    company_details=CompanyDetails(
-                        employees="",
-                        offices_count="",
-                        company_stage=CompanyStage.ESTABLISHED,
-                        financial_status="",
-                        core_business=[],
-                        geographical_presence=[],
-                        organizational_structure=""
-                    ),
-                    position_context=PositionContext(
-                        department_overview="",
-                        reporting_structure="",
-                        growth_plans=[],
-                        key_projects=[],
-                        required_qualifications=[],
-                        similar_roles=[]
-                    ),
-                    work_environment=WorkEnvironment(
-                        company_values=[],
-                        culture_description="",
-                        development_programs=[],
-                        benefits_overview=[],
-                        leadership_style="",
-                        employee_reviews=[],
-                        work_model=WorkModel.HYBRID
-                    )
-                ),
-                industry_analysis=IndustryAnalysis(
-                    market_position=MarketPosition(
-                        industry_ranking="",
-                        key_competitors=[],
-                        differentiators=[],
-                        major_partnerships=[],
-                        recent_achievements=[],
-                        industry_challenges=[]
-                    ),
-                    professional_growth=ProfessionalGrowth(
-                        skill_requirements=[],
-                        career_paths=[],
-                        certifications=[],
-                        salary_ranges="",
-                        professional_associations=[],
-                        industry_outlook=[]
-                    ),
-                    local_market=LocalMarket(
-                        regional_status="",
-                        business_environment="",
-                        local_competitors=[],
-                        employment_regulations=[],
-                        business_culture=[],
-                        required_permits=[]
-                    )
-                )
-            ).dict()
+            expected_output=ResearchOutput
         )
         
         # Contact task
