@@ -186,10 +186,15 @@ def initialize_crew(
                    - Required permits and licenses
 
                 Return the analysis as a structured JSON object matching the ResearchOutput model format.
-                Ensure all information is accurate, current, and relevant to {pitching_role} position.""",
+                Ensure all information is accurate, current, and relevant to {pitching_role} position.
+                
+                IMPORTANT: Your response must be a valid JSON object that follows the ResearchOutput model structure.
+                Do not include any text outside of the JSON object.""",
             agent=researcher,
             expected_output="A comprehensive company and industry analysis",
             output_json=ResearchOutput,
+            context_json=True,
+            tools_json=True
         )
         
         # Contact task

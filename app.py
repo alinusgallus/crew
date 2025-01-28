@@ -131,21 +131,30 @@ def update_tabs_with_content(result, tabs):
     tab1, tab2, tab3 = tabs  # Unpack the tabs
     
     try:
-        # Convert CrewOutput to dictionary format
-        result_dict = result.model_dump() if hasattr(result, 'model_dump') else {}
+        # Get the tasks output
+        tasks_output = []
+        if hasattr(result, 'tasks_output'):
+            tasks_output = result.tasks_output
+        elif isinstance(result, dict) and 'tasks_output' in result:
+            tasks_output = result['tasks_output']
         
         # Initialize outputs
         research_output = None
         contact_output = None
         email_output = None
         
-        # Try to get outputs from tasks_output
-        if 'tasks_output' in result_dict and result_dict['tasks_output']:
-            tasks = result_dict['tasks_output']
-            if len(tasks) >= 3:
-                research_output = tasks[0]['raw']  # This will now be a ResearchOutput model
-                contact_output = tasks[1]['raw']
-                email_output = tasks[2]['raw']
+        # Extract task results
+        if tasks_output and len(tasks_output) >= 3:
+            # Get research output
+            research_result = tasks_output[0]
+            if isinstance(research_result, dict):
+                research_output = research_result.get('output') or research_result.get('raw')
+            else:
+                research_output = research_result
+                
+            # Get contact and email outputs
+            contact_output = tasks_output[1].get('output') if isinstance(tasks_output[1], dict) else tasks_output[1]
+            email_output = tasks_output[2].get('output') if isinstance(tasks_output[2], dict) else tasks_output[2]
         
         # Display Research Tab
         with tab1:
@@ -154,11 +163,17 @@ def update_tabs_with_content(result, tabs):
                 try:
                     # Parse the research output into ResearchOutput model if it's a string
                     if isinstance(research_output, str):
-                        research_data = ResearchOutput(**json.loads(research_output))
+                        try:
+                            research_data = ResearchOutput(**json.loads(research_output))
+                        except json.JSONDecodeError:
+                            # If not valid JSON, try to parse the raw text output
+                            st.warning("Received unstructured output. Displaying raw format:")
+                            st.markdown(research_output)
+                            return
                     else:
                         research_data = research_output
 
-                    # Company Analysis Section
+                    # Display structured data
                     st.markdown("### 🏢 Company Analysis")
                     
                     # Company Details
@@ -276,6 +291,7 @@ def update_tabs_with_content(result, tabs):
 
                 except Exception as e:
                     st.error(f"Error parsing research: {str(e)}")
+                    st.markdown("Raw output:")
                     st.markdown(research_output)
             else:
                 st.warning("No research data available")
@@ -333,6 +349,15 @@ def update_tabs_with_content(result, tabs):
                     st.markdown(email_output)
             else:
                 st.warning("No email draft available")
+
+        # Add debug information (can be toggled with a checkbox)
+        with st.expander("Debug Information", expanded=False):
+            st.write("Raw Result Structure:", type(result))
+            st.json(result.model_dump() if hasattr(result, 'model_dump') else result)
+            if tasks_output:
+                st.write("Tasks Output Types:")
+                for i, task in enumerate(tasks_output):
+                    st.write(f"Task {i}: {type(task)}")
 
     except Exception as e:
         st.error(f"Error updating content: {str(e)}")
